@@ -43,12 +43,12 @@ git add submodule --depth 1 --name <name> <repository> lib/<name>
 [submodule "<name>"]   
 	path = lib/<name>
 	url = <repository>
-	udate = merge
-	branch = <branch|".">
+	update = merge
+	branch = <branch>|.
 	shallow = true
 ~~~
 
-If the submodule contains submodules referenced by the pattern described in this file, you SHOULD also add `fetchRecurseSubmodules = false`.
+If the submodule contains submodules referenced by the pattern described in this file, you SHOULD also add `fetchRecurseSubmodules = false`. You MAY also consider setting `update = rebase` and `branch = .`
 
 ### `msvc/`
 This folder contains all project files and settings for the project.
