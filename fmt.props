@@ -4,7 +4,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <fmtDirectory>$(MSBuildThisFileDirectory)..\lib\fmt\</fmtDirectory>
-	<IncludePath>$(fmtDirectory)include;$(IncludePath)</IncludePath>
+    <IncludePath>$(fmtDirectory)include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup Condition="'$(ProjectGuid)'!='{B26BAF12-CE1D-4B36-A422-9E87DCC482C6}'">
     <ProjectReference Include="$(MSBuildThisFileDirectory)fmt\fmt.vcxproj">
