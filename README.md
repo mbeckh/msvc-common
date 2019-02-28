@@ -4,15 +4,15 @@ Common settings for C++ projects created in Microsoft Visual Studio. This docume
 ## Directory Layout
 The common settings are based on the following directory layout.
 
-- <solution>/
-  - bin/
-  - doc/
-  - include/
-  - lib/
-  - msvc/
-  - msvc-common/
-  - obj/
-  - src/: 
+- `<solution>/`
+  - `bin/`
+  - `doc/`
+  - `include/`
+  - `lib/`
+  - `msvc/`
+  - `msvc-common/`
+  - `obj/`
+  - `src/` 
 
 ### Root Folder
 The root folder contains the main solution file `<solution>.sln`.
@@ -34,16 +34,20 @@ This directory contains any external libs, mainly in the form of git submodules.
 To ensure that all libraries which are part of a solution use the same build settings, all dependencies of all sub modules using this project scheme MUST also be placed into the root `lib/` folder.
 
 For the submodules which are available by referencing property sheets in `msvc-common/` the following command is RECOMMENDED to add it in git:
-    git add submodule --depth 1 --name <name> <repository> lib/<name>
+~~~
+git add submodule --depth 1 --name <name> <repository> lib/<name>
+~~~
 
 `.gitmodules` SHOULD contain the following lines:
-    [submodule "<name>"]   
-    path = lib/<name>
-    url = <repository>
-    udate = merge
-    branch = <branch|".">
-    shallow = true
-   
+~~~
+[submodule "<name>"]   
+	path = lib/<name>
+	url = <repository>
+	udate = merge
+	branch = <branch|".">
+	shallow = true
+~~~
+
 If the submodule contains submodules referenced by the pattern described in this file, you SHOULD also add `fetchRecurseSubmodules = false`.
 
 ### `msvc/`
@@ -61,7 +65,7 @@ This folder contains all Visual Studio project files:
 
 You MAY also place the files `stdadx.h` and `stdafx.cpp` inside this folder. Both are automatically picked-up by the defalt configuration files.
 
-#### `msvc-common/`
+### `msvc-common/`
 This folder contains common configuration files and readily available projects form common third party libraries. In fact, it is this project mapped as a submodule.
 
 - `BuildConfiguration.props`: Included in the project file a a property sheet. A file with the same name in `<root>/msvc/` is detected automatically and MAY be used to override or add settings specific to a solution.
@@ -69,11 +73,11 @@ This folder contains common configuration files and readily available projects f
 - `fmt.props`: A property sheet which will add a dependency with include and libary paths for {fmt} (https://github.com/fmtlib/fmt) to a project.
 - `googletest.props`: A property sheet which will add a dependency with include and libary paths for googletest (https://github.com/google/googletest) to a project.
 
-#### `obj/`
-All intermediate build files are placed in the folder `obj/`.
+### `obj/`
+All intermediate build files are placed in this folder.
 
-#### `src/`
+### `src/`
 This folder is home of all source files and internal includes.
 
-#### `test/`
+### `test/`
 This folder is home of all source files for automated tests.
