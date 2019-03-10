@@ -17,7 +17,7 @@ The common settings are based on the following directory layout.
 ### Root Folder
 The root folder contains the main solution file `<solution>.sln`.
 
-#### `bin/`
+### `bin/`
 All binaries are placed in the folder `bin/`.
 
 The build settings append an underscore, either `x86` oder `x64` depending on the platform and a `d` for debug builds to the file name. For example, a 32-bit debug build for the library project `foo` will be named `foo_x32d.lib` whereas the 64-bit release build of the same project would be named `foo_x64.lib`.
@@ -25,7 +25,7 @@ The build settings append an underscore, either `x86` oder `x64` depending on th
 ### `doc/`
 Documentation and all files required to build it SHOULD be put into this diretory.
 
-#### `include/`
+### `include/`
 All includes which should be externally visible, i.e. consumed by users of a shared library, SHOULD be placed into this folder.
 
 ### `lib/`
