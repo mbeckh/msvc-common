@@ -52,6 +52,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/PDBALTPATH:%_PDB% %(AdditionalOptions)</AdditionalOptions>
+	  <AdditionalLibraryDirectories>$(SolutionDir)bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>kernel32.lib;user32.lib</AdditionalDependencies>
     </Link>
     <Link Condition="'$(Configuration)'=='Release'">

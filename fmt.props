@@ -6,10 +6,15 @@
     <fmtDirectory>$(MSBuildThisFileDirectory)..\lib\fmt\</fmtDirectory>
     <IncludePath>$(fmtDirectory)include;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Link>
+	  <AdditionalDependencies Condition="'$(ProjectGuid)'!='{B26BAF12-CE1D-4B36-A422-9E87DCC482C6}'">$(MSBuildThisFileName)_$(PlatformShortName)$(DebugSuffix).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup Condition="'$(ProjectGuid)'!='{B26BAF12-CE1D-4B36-A422-9E87DCC482C6}'">
     <ProjectReference Include="$(MSBuildThisFileDirectory)fmt\fmt.vcxproj">
       <Project>{B26BAF12-CE1D-4B36-A422-9E87DCC482C6}</Project>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
   </ItemGroup>
 </Project>
