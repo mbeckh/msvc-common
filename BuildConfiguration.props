@@ -19,6 +19,7 @@
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4373</DisableSpecificWarnings>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <ClCompile>
