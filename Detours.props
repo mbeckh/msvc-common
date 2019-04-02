@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <DetoursDirectory>$(MSBuildThisFileDirectory)..\lib\Detours\</DetoursDirectory>
+    <IncludePath>$(DetoursDirectory)src;$(IncludePath)</IncludePath>
+	<IncludePath Condition="'$(ProjectGuid)'!='{81966AD9-2949-4BEA-92D6-B74B756DC615}'">$(MSBuildThisFileDirectory)Detours;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies Condition="'$(ProjectGuid)'!='{81966AD9-2949-4BEA-92D6-B74B756DC615}'">$(MSBuildThisFileName)_$(PlatformShortName)$(DebugSuffix).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <ClCompile Condition="'$(ProjectGuid)'=='{81966AD9-2949-4BEA-92D6-B74B756DC615}'">
+      <PreprocessorDefinitions>DETOURS_DONT_REMOVE_SAL_20;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup Condition="'$(ProjectGuid)'!='{81966AD9-2949-4BEA-92D6-B74B756DC615}'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)Detours\Detours.vcxproj">
+      <Project>{B26BAF12-CE1D-4B36-A422-9E87DCC482C6}</Project>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

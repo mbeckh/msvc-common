@@ -71,6 +71,7 @@ This folder contains common configuration files and readily available projects f
 - `BuildConfiguration.props`: Included in the project file a a property sheet. A file with the same name in `<root>/msvc/` is detected automatically and MAY be used to override or add settings specific to a solution.
 - `ProjectConfiguration.props`: Include the file after `Microsoft.Cpp.Default.props` in the project file. A file with the same name in `<root>/msvc/` is detected automatically and MAY be used to override or add settings specific to a solution.
 - `args.props`: A property sheet which will add a dependency to args command line parser (https://github.com/Taywee/args) to a project.
+- `Detours.props`: A property sheet which will add a dependency with include and libary paths for Microsoft Detours (https://github.com/Microsoft/Detours) to a project.
 - `fmt.props`: A property sheet which will add a dependency with include and libary paths for {fmt} (https://github.com/fmtlib/fmt) to a project.
 - `googletest.props`: A property sheet which will add a dependency with include and libary paths for googletest (https://github.com/google/googletest) to a project.
 
