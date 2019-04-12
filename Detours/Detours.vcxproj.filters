@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Additional Header Files">
+      <UniqueIdentifier>{970c04ad-682e-4847-bb31-0d3bb5ff5a4c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(DetoursDirectory)src/creatwth.cpp">
@@ -45,5 +48,10 @@
     <ClCompile Include="$(DetoursDirectory)src/modules.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="detours_gmock.h">
+      <Filter>Additional Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

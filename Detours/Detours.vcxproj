@@ -27,7 +27,9 @@
   <ItemDefinitionGroup>
     <ClCompile />
   </ItemDefinitionGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ClInclude Include="detours_gmock.h" />
+  </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(DetoursDirectory)src/creatwth.cpp" />
     <ClCompile Include="$(DetoursDirectory)src/detours.cpp" />
