@@ -18,6 +18,8 @@ limitations under the License.
 
 #include <gmock/gmock.h>
 
+#include <windows.h>
+// MUST include <windows.h> before <detours.h>
 #include <detours.h>
 
 #include <type_traits>
