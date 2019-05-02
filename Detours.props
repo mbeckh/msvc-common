@@ -19,7 +19,7 @@
   </ItemDefinitionGroup>
   <ItemGroup Condition="'$(ProjectGuid)'!='{81966AD9-2949-4BEA-92D6-B74B756DC615}'">
     <ProjectReference Include="$(MSBuildThisFileDirectory)Detours\Detours.vcxproj">
-      <Project>{B26BAF12-CE1D-4B36-A422-9E87DCC482C6}</Project>
+      <Project>{81966AD9-2949-4BEA-92D6-B74B756DC615}</Project>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
   </ItemGroup>
