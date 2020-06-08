@@ -18,11 +18,10 @@
       <ConformanceMode>true</ConformanceMode>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4373</DisableSpecificWarnings>
       <SDLCheck>true</SDLCheck>
-    </ClCompile>
-    <ClCompile>
-      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_WIN32_WINNT=0x0602;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Condition="'$(Configuration)'=='Debug'">
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -30,20 +29,21 @@
     <ClCompile Condition="'$(Configuration)'=='Release'">
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Full</Optimization>
-      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OmitFramePointers>true</OmitFramePointers>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalOptions>/Gw /Ob3 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-	<ClCompile Condition="exists('stdafx.h')">
+    <ClCompile Condition="exists('stdafx.h')">
       <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <ForcedIncludeFiles>%(ForcedIncludeFiles);stdafx.h</ForcedIncludeFiles>
-	</ClCompile>
-	<ClCompile Condition="!exists('stdafx.h')">
+    </ClCompile>
+    <ClCompile Condition="!exists('stdafx.h')">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-	</ClCompile>
+    </ClCompile>
     <ResourceCompile Condition="'$(Configuration)'=='Debug'">
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
@@ -52,19 +52,24 @@
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/PDBALTPATH:%_PDB% %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>$(SolutionDir)bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>kernel32.lib;user32.lib</AdditionalDependencies>
     </Link>
     <Link Condition="'$(Configuration)'=='Release'">
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
+    <Lib Condition="'$(Configuration)'=='Release'">
+      <TreatLibWarningAsErrors>true</TreatLibWarningAsErrors>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup Condition="exists('stdafx.h')">
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup Condition="exists('stdafx.cpp')">
     <ClCompile Include="stdafx.cpp">
-		<PrecompiledHeader>Create</PrecompiledHeader>
-	</ClCompile>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
 </Project>
