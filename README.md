@@ -23,7 +23,7 @@ All binaries are placed in the folder `bin/`.
 The build settings append an underscore, either `x86` oder `x64` depending on the platform and a `d` for debug builds to the file name. For example, a 32-bit debug build for the library project `foo` will be named `foo_x32d.lib` whereas the 64-bit release build of the same project would be named `foo_x64.lib`.
 
 ### `doc/`
-Documentation and all files required to build it SHOULD be put into this diretory.
+Documentation and all files required to build it SHOULD be put into this directory.
 
 ### `include/`
 All includes which should be externally visible, i.e. consumed by users of a shared library, SHOULD be placed into this folder.
@@ -63,7 +63,7 @@ This folder contains all Visual Studio project files:
 - `<project>.vcxproj.filters`
 - `<project>.vcxproj.user` (SHOULD be excluded in `.gitignore`).
 
-You MAY also place the files `stdadx.h` and `stdafx.cpp` inside this folder. Both are automatically picked-up by the defalt configuration files.
+You MAY also place the files `stdadx.h` and `stdafx.cpp` inside this folder. Both are automatically picked-up by the default configuration files.
 
 ### `msvc-common/`
 This folder contains common configuration files and readily available projects form common third party libraries. In fact, it is this project mapped as a submodule.
@@ -71,9 +71,12 @@ This folder contains common configuration files and readily available projects f
 - `BuildConfiguration.props`: Included in the project file a a property sheet. A file with the same name in `<root>/msvc/` is detected automatically and MAY be used to override or add settings specific to a solution.
 - `ProjectConfiguration.props`: Include the file after `Microsoft.Cpp.Default.props` in the project file. A file with the same name in `<root>/msvc/` is detected automatically and MAY be used to override or add settings specific to a solution.
 - `args.props`: A property sheet which will add a dependency to args command line parser (https://github.com/Taywee/args) to a project.
-- `Detours.props`: A property sheet which will add a dependency with include and libary paths for Microsoft Detours (https://github.com/Microsoft/Detours) to a project.
-- `fmt.props`: A property sheet which will add a dependency with include and libary paths for {fmt} (https://github.com/fmtlib/fmt) to a project.
-- `googletest.props`: A property sheet which will add a dependency with include and libary paths for googletest (https://github.com/google/googletest) to a project.
+- `Detours.props`: A property sheet which will add a dependency with include and library paths for Microsoft Detours (https://github.com/Microsoft/Detours) to a project.
+- `fmt.props`: A property sheet which will add a dependency with include and library paths for {fmt} (https://github.com/fmtlib/fmt) to a project.
+- `googletest.props`: A property sheet which will add a dependency with include and library paths for googletest (https://github.com/google/googletest) to a project.
+
+#### `msvc-common/Detours`
+The file `detours_gmock.h` contains some useful macros for using Detours together with googletest and googlemock. The file is made available in the system class path.
 
 ### `obj/`
 All intermediate build files are placed in this folder.
