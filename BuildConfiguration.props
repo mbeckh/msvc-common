@@ -10,6 +10,9 @@
     <IntDir>$(SolutionDir)obj\$(ProjectName)\$(PlatformShortName)_$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_$(PlatformShortName)$(DebugSuffix)</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(AnalyzeProjects)'!='' And $([System.Text.RegularExpressions.Regex]::IsMatch($(AnalyzeProjects), '(^|;)$(ProjectName)(;|$)'))">
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
