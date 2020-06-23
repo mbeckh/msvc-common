@@ -4,15 +4,15 @@ Common settings for C++ projects created in Microsoft Visual Studio. This docume
 ## Directory Layout
 The common settings are based on the following directory layout.
 
-- `<solution>/`
-  - `bin/`
-  - `doc/`
-  - `include/`
-  - `lib/`
-  - `msvc/`
-  - `msvc-common/`
-  - `obj/`
-  - `src/` 
+-   `<solution>/`
+    -   `bin/`
+    -   `doc/`
+    -   `include/`
+    -   `lib/`
+    -   `msvc/`
+    -   `msvc-common/`
+    -   `obj/`
+    -   `src/` 
 
 ### Root Folder
 The root folder contains the main solution file `<solution>.sln`.
@@ -34,18 +34,18 @@ This directory contains any external libs, mainly in the form of git submodules.
 To ensure that all libraries which are part of a solution use the same build settings, all dependencies of all sub modules using this project scheme MUST also be placed into the root `lib/` folder.
 
 For the submodules which are available by referencing property sheets in `msvc-common/` the following command is RECOMMENDED to add it in git:
-~~~
+~~~shell
 git add submodule --depth 1 --name <name> <repository> lib/<name>
 ~~~
 
 `.gitmodules` SHOULD contain the following lines:
-~~~
+~~~text
 [submodule "<name>"]   
-	path = lib/<name>
-	url = <repository>
-	update = merge
-	branch = <branch>|.
-	shallow = true
+  path = lib/<name>
+  url = <repository>
+  update = merge
+  branch = <branch>|.
+  shallow = true
 ~~~
 
 If the submodule contains submodules referenced by the pattern described in this file, you SHOULD also add `fetchRecurseSubmodules = false`. You MAY also consider setting `update = rebase` and `branch = .`
@@ -59,21 +59,21 @@ For  each project inside the solution a separate folder inside `msvc/` is create
 
 #### `msvc/<project>/`
 This folder contains all Visual Studio project files:
-- `<project>.vcxproj`
-- `<project>.vcxproj.filters`
-- `<project>.vcxproj.user` (SHOULD be excluded in `.gitignore`).
+-   `<project>.vcxproj`
+-   `<project>.vcxproj.filters`
+-   `<project>.vcxproj.user` (SHOULD be excluded in `.gitignore`).
 
 You MAY also place the files `stdadx.h` and `stdafx.cpp` inside this folder. Both are automatically picked-up by the default configuration files.
 
 ### `msvc-common/`
 This folder contains common configuration files and readily available projects form common third party libraries. In fact, it is this project mapped as a submodule.
 
-- `BuildConfiguration.props`: Included in the project file a a property sheet. A file with the same name in `<root>/msvc/` is detected automatically and MAY be used to override or add settings specific to a solution.
-- `ProjectConfiguration.props`: Include the file after `Microsoft.Cpp.Default.props` in the project file. A file with the same name in `<root>/msvc/` is detected automatically and MAY be used to override or add settings specific to a solution.
-- `args.props`: A property sheet which will add a dependency to args command line parser (https://github.com/Taywee/args) to a project.
-- `Detours.props`: A property sheet which will add a dependency with include and library paths for Microsoft Detours (https://github.com/Microsoft/Detours) to a project.
-- `fmt.props`: A property sheet which will add a dependency with include and library paths for {fmt} (https://github.com/fmtlib/fmt) to a project.
-- `googletest.props`: A property sheet which will add a dependency with include and library paths for googletest (https://github.com/google/googletest) to a project.
+-   `BuildConfiguration.props`: Included in the project file a a property sheet. A file with the same name in `<root>/msvc/` is detected automatically and MAY be used to override or add settings specific to a solution.
+-   `ProjectConfiguration.props`: Include the file after `Microsoft.Cpp.Default.props` in the project file. A file with the same name in `<root>/msvc/` is detected automatically and MAY be used to override or add settings specific to a solution.
+-   `args.props`: A property sheet which will add a dependency to args command line parser (<https://github.com/Taywee/args>) to a project.
+-   `Detours.props`: A property sheet which will add a dependency with include and library paths for Microsoft Detours (<https://github.com/Microsoft/Detours>) to a project.
+-   `fmt.props`: A property sheet which will add a dependency with include and library paths for {fmt} (<https://github.com/fmtlib/fmt>) to a project.
+-   `googletest.props`: A property sheet which will add a dependency with include and library paths for googletest (<https://github.com/google/googletest>) to a project.
 
 #### `msvc-common/Detours`
 The file `detours_gmock.h` contains some useful macros for using Detours together with googletest and googlemock. The file is made available in the system class path.
