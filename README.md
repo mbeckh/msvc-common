@@ -5,14 +5,14 @@ Common settings for C++ projects created in Microsoft Visual Studio. This docume
 The common settings are based on the following directory layout.
 
 -   `<solution>/`
-  -   `bin/`
-  -   `doc/`
-  -   `include/`
-  -   `lib/`
-  -   `msvc/`
-  -   `msvc-common/`
-  -   `obj/`
-  -   `src/` 
+    -   `bin/`
+    -   `doc/`
+    -   `include/`
+    -   `lib/`
+    -   `msvc/`
+    -   `msvc-common/`
+    -   `obj/`
+    -   `src/` 
 
 ### Root Folder
 The root folder contains the main solution file `<solution>.sln`.
@@ -70,10 +70,10 @@ This folder contains common configuration files and readily available projects f
 
 -   `BuildConfiguration.props`: Included in the project file a a property sheet. A file with the same name in `<root>/msvc/` is detected automatically and MAY be used to override or add settings specific to a solution.
 -   `ProjectConfiguration.props`: Include the file after `Microsoft.Cpp.Default.props` in the project file. A file with the same name in `<root>/msvc/` is detected automatically and MAY be used to override or add settings specific to a solution.
--   `args.props`: A property sheet which will add a dependency to args command line parser (https://github.com/Taywee/args) to a project.
--   `Detours.props`: A property sheet which will add a dependency with include and library paths for Microsoft Detours (https://github.com/Microsoft/Detours) to a project.
--   `fmt.props`: A property sheet which will add a dependency with include and library paths for {fmt} (https://github.com/fmtlib/fmt) to a project.
--   `googletest.props`: A property sheet which will add a dependency with include and library paths for googletest (https://github.com/google/googletest) to a project.
+-   `args.props`: A property sheet which will add a dependency to args command line parser (<https://github.com/Taywee/args>) to a project.
+-   `Detours.props`: A property sheet which will add a dependency with include and library paths for Microsoft Detours (<https://github.com/Microsoft/Detours>) to a project.
+-   `fmt.props`: A property sheet which will add a dependency with include and library paths for {fmt} (<https://github.com/fmtlib/fmt>) to a project.
+-   `googletest.props`: A property sheet which will add a dependency with include and library paths for googletest (<https://github.com/google/googletest>) to a project.
 
 #### `msvc-common/Detours`
 The file `detours_gmock.h` contains some useful macros for using Detours together with googletest and googlemock. The file is made available in the system class path.
