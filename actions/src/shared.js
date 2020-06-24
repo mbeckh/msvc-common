@@ -196,7 +196,7 @@ exports.analyze = async function() {
     for (const platform of platforms) {
       for (const configuration of configurations) {
         core.startGroup(`Running code analysis on ${projects.join(', ')} for configuration ${configuration} on ${platform}`);
-        const targetsArg = projects.map((e) => `$(e):ClangTidy`).join(';');
+        const targetsArg = projects.map((e) => `${e}:ClangTidy`).join(';');
         const projectsArg = projects.join(';');
         await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, '/m', `/t:${targetsArg}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}`, `/p:AnalyzeProjects="${projectsArg}"`, '/p:EnableMicrosoftCodeAnalysis=false', '/p:EnableClangTidyCodeAnalysis=true'], { 'cwd': solutionPath.win, 'ignoreReturnCode': true, 'windowsVerbatimArguments': true });
         core.endGroup();
