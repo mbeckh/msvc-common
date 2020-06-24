@@ -81,20 +81,25 @@ function getRepositoryName() {
   return env.GITHUB_REPOSITORY.substring(env.GITHUB_REPOSITORY.indexOf('/') + 1);
 }
 
+function getSolutionPath() {
+  const path = core.getInput('solution-path').replace('/', '\\').replace(/\\$/, ''); // ensure windows paths, strip trailing \ from path
+  return { win: path, nix: path.replace('\\', '/') };
+}
+
 function getProjects() {
   return core.getInput('projects', { 'required': true }).split(/\s*[,;\n]\s*/).filter((e) => e !== '');
 }
 
 exports.build = async function() {
   try {
-    const solutionPath = core.getInput('solution-path');
+    const solutionPath = getSolutionPath();
     const solutionName = getRepositoryName();
     const projects = getProjects();
     const configuration = core.getInput('configuration', { 'required': true });
     const platform = core.getInput('platform') || 'x64';
 
     core.startGroup(`Building projects ${projects.join(', ')}`);
-    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, `/t:${projects.join(';')}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}` ], { 'cwd': solutionPath });
+    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, `/t:${projects.join(';')}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}` ], { 'cwd': solutionPath.win });
     core.endGroup();
   } catch (error) {
     core.setFailed(error.message);
@@ -103,7 +108,7 @@ exports.build = async function() {
 
 exports.run = async function() {
   try {
-    const solutionPath = core.getInput('solution-path');
+    const solutionPath = getSolutionPath();
     const projects = getProjects();
     const configuration = core.getInput('configuration', { 'required': true });
     const suffix = configuration === 'Debug' ? 'd' : '';
@@ -111,7 +116,7 @@ exports.run = async function() {
 
     for (project of projects) {
       core.startGroup(`Running ${project}`);
-      await exec.exec(`${env.GITHUB_WORKSPACE}\\${solutionPath}\\bin\\${project}_${platform}${suffix}.exe`, [ ], { 'cwd': solutionPath + '\\bin' });
+      await exec.exec(`${env.GITHUB_WORKSPACE}\\${solutionPath.win}\\bin\\${project}_${platform}${suffix}.exe`, [ ], { 'cwd': solutionPath.win + '\\bin' });
       core.endGroup();
     }
   } catch (error) {
@@ -123,8 +128,7 @@ exports.coverage = async function() {
   try {
     await setupOpenCppCoverage();
 
-    const solutionPath = core.getInput('solution-path');
-    const bashSolutionPath = solutionPath.replace('\\', '/');
+    const solutionPath = getSolutionPath();
     const projects = getProjects();
     const configuration = core.getInput('configuration', { 'required': true });
     const suffix = configuration === 'Debug' ? 'd' : '';
@@ -148,7 +152,7 @@ exports.coverage = async function() {
       
     for (project of projects) {
       core.startGroup('Getting code coverage');
-      const path = `${env.GITHUB_WORKSPACE}\\${solutionPath}`.replace(/\\\.$/, ''); // remove trailing \. for OpenCppCoverage args
+      const path = `${env.GITHUB_WORKSPACE}\\${solutionPath.win}`.replace(/\\\.$/, ''); // remove trailing \. for OpenCppCoverage args
       await exec.exec('OpenCppCoverage.exe',
                       [`--modules=${path}\\`,
                        `--excluded_modules=${path}\\lib\\`,
@@ -156,16 +160,16 @@ exports.coverage = async function() {
                        `--excluded_sources=${path}\\lib\\`,
                        `--excluded_sources=${path}\\test\\`,
                        `--export_type=cobertura:${project}_coverage.xml`,
-                       '--', `${project}_${platform}${suffix}.exe` ], { 'cwd': solutionPath + '\\bin' });
+                       '--', `${project}_${platform}${suffix}.exe` ], { 'cwd': solutionPath.win + '\\bin' });
       core.endGroup();
     }
 
     core.startGroup('Sending coverage to codecov');
-    await exec.exec('bash', [ '-c', `bash <(curl -sS https://codecov.io/bash) -Z -f '${bashSolutionPath}/bin/*_coverage.xml'` ]);
+    await exec.exec('bash', [ '-c', `bash <(curl -sS https://codecov.io/bash) -Z -f '${solutionPath.nix}/bin/*_coverage.xml'` ]);
     core.endGroup();
 
     core.startGroup('Sending coverage to codacy');
-    await exec.exec('bash', [ '-c', `./.codacy-coverage.sh report -r '${bashSolutionPath}/bin/*_coverage.xml' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
+    await exec.exec('bash', [ '-c', `./.codacy-coverage.sh report -r '${solutionPath.nix}/bin/*_coverage.xml' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
 
     if (!codacyCoverageCacheId) {
       codacyCoverageCacheId = await saveCache([ '.codacy-coverage' ], codacyCacheKey);
@@ -182,8 +186,7 @@ exports.analyze = async function() {
     const bashToolPath = (await setupCodacyClangTidy()).replace('\\', '/');
 
     const solutionName = getRepositoryName();
-    const solutionPath = core.getInput('solution-path') || '.';
-    const bashSolutionPath = solutionPath.replace('\\', '/');
+    const solutionPath = getSolutionPath();
     const projects = getProjects();
     const configuration = core.getInput('configuration', { 'required': true });
     const platform = core.getInput('platform');
@@ -192,12 +195,12 @@ exports.analyze = async function() {
 
     core.startGroup(`Running code analysis on ${projects.join(', ')}`);
     const projectsArg = projects.join(';');
-    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, `/t:"${projectsArg}"`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}`, `/p:AnalyzeProjects="${projectsArg}"`, '/p:EnableMicrosoftCodeAnalysis=false', '/p:EnableClangTidyCodeAnalysis=true'], { 'cwd': solutionPath, 'ignoreReturnCode': true, 'windowsVerbatimArguments': true });
+    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, `/t:"${projectsArg}"`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}`, `/p:AnalyzeProjects="${projectsArg}"`, '/p:EnableMicrosoftCodeAnalysis=false', '/p:EnableClangTidyCodeAnalysis=true'], { 'cwd': solutionPath.win, 'ignoreReturnCode': true, 'windowsVerbatimArguments': true });
     core.endGroup();
 
     core.startGroup('Sending code analysis to codacy');
-    await exec.exec('bash', [ '-c', `find ${bashSolutionPath}/obj/ -name '*.ClangTidy.log' -exec cat {} \\; | java -jar ${bashToolPath}/codacy-clang-tidy.jar | sed -r -e "s#[\\\\]{2}#/#g; s#ClangTidy_clang-#clang-#g" > ${bashSolutionPath}/bin/clang-tidy.json` ]);
-    await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" -d @${bashSolutionPath}/bin/clang-tidy.json "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/issuesRemoteResults"` ]);
+    await exec.exec('bash', [ '-c', `find ${solutionPath.nix}/obj/ -name '*.ClangTidy.log' -exec cat {} \\; | java -jar ${bashToolPath}/codacy-clang-tidy.jar | sed -r -e "s#[\\\\]{2}#/#g; s#ClangTidy_clang-#clang-#g" > ${solutionPath.nix}/bin/clang-tidy.json` ]);
+    await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" -d @${solutionPath.nix}/bin/clang-tidy.json "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/issuesRemoteResults"` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/resultsFinal"` ]);
     core.endGroup();
   } catch (error) {
