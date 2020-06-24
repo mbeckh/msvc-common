@@ -55,5 +55,5 @@ jobs:
       with:
         solution-path: actions/test
         projects: main
-        configurations: [ Debug, Release ]
+        configurations: Debug, Release
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
