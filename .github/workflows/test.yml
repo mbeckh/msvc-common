@@ -18,21 +18,21 @@ jobs:
     - name: Run 'build' action
       uses: ./actions/build
       with:
-        solution-path: test
+        solution-path: actions/test
         projects: main, main_Test
         configuration: Debug
 
     - name: Run 'run' action
       uses: ./actions/run
       with:
-        solution-path: test
+        solution-path: actions/test
         projects: main_Test
         configuration: Debug
 
     - name: Run 'coverage' action
       uses: ./actions/coverage
       with:
-        solution-path: test
+        solution-path: actions/test
         projects: main_Test
         configuration: Debug
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
@@ -48,7 +48,7 @@ jobs:
     - name: Run 'analyze' action
       uses: ./actions/analyze
       with:
-        solution-path: test
+        solution-path: actions/test
         projects: main
         configuration: Debug
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
