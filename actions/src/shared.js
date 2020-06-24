@@ -93,8 +93,8 @@ exports.build = async function() {
     const configuration = core.getInput('configuration', { 'required': true });
     const platform = core.getInput('platform') || 'x64';
 
-    core.startGroup(`Building projects ${projects}`);
-    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, `/t:${projects.join(';')}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}` ], { 'cwd': solutionPath });
+    core.startGroup(`Building projects ${projects.join(', ')}`);
+    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, `/t:"${projects.join(';')}"`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}` ], { 'cwd': solutionPath, 'windowsVerbatimArguments': true });
     core.endGroup();
   } catch (error) {
     core.setFailed(error.message);
@@ -107,7 +107,7 @@ exports.run = async function() {
     const projects = getProjects();
     const configuration = core.getInput('configuration', { 'required': true });
     const suffix = configuration === 'Debug' ? 'd' : '';
-    const platform = core.getInput('platform') || 'x64';
+    const platform = core.getInput('platform');
 
     for (project of projects) {
       core.startGroup(`Running ${project}`);
@@ -121,14 +121,14 @@ exports.run = async function() {
 
 exports.coverage = async function() {
   try {
-    setupOpenCppCoverage();
+    await setupOpenCppCoverage();
 
     const solutionPath = core.getInput('solution-path');
     const bashSolutionPath = solutionPath.replace('\\', '/');
     const projects = getProjects();
     const configuration = core.getInput('configuration', { 'required': true });
     const suffix = configuration === 'Debug' ? 'd' : '';
-    const platform = core.getInput('platform') || 'x64';
+    const platform = core.getInput('platform');
     const codacyToken = core.getInput('codacy-token', { 'required': true });
     core.setSecret(codacyToken);
 
@@ -178,20 +178,20 @@ exports.coverage = async function() {
 
 exports.analyze = async function() {
   try {
-    const bashToolPath = setupCodacyClangTidy().replace('\\', '/');
+    const bashToolPath = (await setupCodacyClangTidy()).replace('\\', '/');
 
     const solutionName = getRepositoryName();
     const solutionPath = core.getInput('solution-path') || '.';
     const bashSolutionPath = solutionPath.replace('\\', '/');
     const projects = getProjects();
     const configuration = core.getInput('configuration', { 'required': true });
-    const platform = core.getInput('platform') || 'x64';
+    const platform = core.getInput('platform');
     const codacyToken = core.getInput('codacy-token', { 'required': true });
     core.setSecret(codacyToken);
 
     core.startGroup(`Running code analysis on ${projects.join(', ')}`);
     const projectsArg = projects.join(';');
-    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, `/t:${projectsArg}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}`, `/p:AnalyzeProjects="${projectsArg}"`, '/p:EnableMicrosoftCodeAnalysis=false', '/p:EnableClangTidyCodeAnalysis=true'], { 'cwd': solutionPath, 'ignoreReturnCode': true, 'windowsVerbatimArguments': true });
+    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, `/t:"${projectsArg}"`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}`, `/p:AnalyzeProjects="${projectsArg}"`, '/p:EnableMicrosoftCodeAnalysis=false', '/p:EnableClangTidyCodeAnalysis=true'], { 'cwd': solutionPath, 'ignoreReturnCode': true, 'windowsVerbatimArguments': true });
     core.endGroup();
 
     core.startGroup('Sending code analysis to codacy');
