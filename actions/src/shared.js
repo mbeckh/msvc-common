@@ -111,7 +111,7 @@ exports.run = async function() {
 
     for (project of projects) {
       core.startGroup(`Running ${project}`);
-      await exec.exec(`${solutionPath}\\bin\\${project}_${platform}${suffix}.exe`, [ ], { 'cwd': solutionPath + '\\bin' });
+      await exec.exec(`${project}_${platform}${suffix}.exe`, [ ], { 'cwd': solutionPath + '\\bin' });
       core.endGroup();
     }
   } catch (error) {
