@@ -1,12 +1,9 @@
 engines:
   duplication:
     exclude_paths:
-      - **/test/**
+      - '**/test/**'
   metric:
     exclude_paths:
-      - **/test/**
-  coverage:
-    exclude_paths:
-      - **/test/**
+      - '**/test/**'
 exclude_paths:
-  - **/dist/**
+  - '**/dist/**'
