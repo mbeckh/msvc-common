@@ -204,8 +204,8 @@ exports.analyze = async function() {
     }
 
     core.startGroup('Sending code analysis to codacy');
-    await exec.exec('bash', [ '-c', `find ${solutionPath.nix}/obj/ -name '*.ClangTidy.log' -exec cat {} \\; | java -jar ${bashToolPath}/codacy-clang-tidy.jar | sed -r -e "s#[\\\\]{2}#/#g; s#ClangTidy_clang-#clang-#g" > ${solutionPath.nix}/bin/clang-tidy.json` ]);
-    await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" -d @${solutionPath.nix}/bin/clang-tidy.json "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/issuesRemoteResults"` ]);
+    await exec.exec('bash', [ '-c', `find ${solutionPath.nix}/obj/ -name '*.ClangTidy.log' -exec cat {} \\; | java -jar ${bashToolPath}/codacy-clang-tidy.jar | sed -r -e "s#[\\\\]{2}#/#g; s#ClangTidy_clang-#clang-#g" > ${solutionPath.nix}/obj/clang-tidy.json` ]);
+    await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" -d @${solutionPath.nix}/obj/clang-tidy.json "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/issuesRemoteResults"` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/resultsFinal"` ]);
     core.endGroup();
   } catch (error) {
