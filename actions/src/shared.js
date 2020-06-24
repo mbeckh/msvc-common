@@ -104,7 +104,7 @@ exports.build = async function() {
   } catch (error) {
     core.setFailed(error.message);
   }
-}
+};
 
 exports.run = async function() {
   try {
@@ -114,7 +114,7 @@ exports.run = async function() {
     const suffix = configuration === 'Debug' ? 'd' : '';
     const platform = core.getInput('platform');
 
-    for (project of projects) {
+    for (const project of projects) {
       core.startGroup(`Running ${project}`);
       await exec.exec(`${env.GITHUB_WORKSPACE}\\${solutionPath.win}\\bin\\${project}_${platform}${suffix}.exe`, [ ], { 'cwd': solutionPath.win + '\\bin' });
       core.endGroup();
@@ -122,7 +122,7 @@ exports.run = async function() {
   } catch (error) {
     core.setFailed(error.message);
   }
-}
+};
 
 exports.coverage = async function() {
   try {
@@ -146,11 +146,11 @@ exports.coverage = async function() {
     const codacyCacheKey = `codacy-coverage-${hex}`;
     const codacyCoverageCacheId = await restoreCache([ '.codacy-coverage' ], codacyCacheKey, [ 'codacy-coverage-' ]);
     if (codacyCoverageCacheId) {
-      core.info(`.codacy-coverage is found in cache`);
+      core.info('.codacy-coverage is found in cache');
     }
     core.endGroup();
       
-    for (project of projects) {
+    for (const project of projects) {
       core.startGroup('Getting code coverage');
       const path = `${env.GITHUB_WORKSPACE}\\${solutionPath.win}`.replace(/\\\.$/, ''); // remove trailing \. for OpenCppCoverage args
       await exec.exec('OpenCppCoverage.exe',
@@ -173,13 +173,13 @@ exports.coverage = async function() {
 
     if (!codacyCoverageCacheId) {
       await saveCache([ '.codacy-coverage' ], codacyCacheKey);
-      core.info(`Added .codacy-coverage to cache`);
+      core.info('Added .codacy-coverage to cache');
     }
     core.endGroup();
   } catch (error) {
     core.setFailed(error.message);
   }
-}
+};
 
 exports.analyze = async function() {
   try {
@@ -206,4 +206,4 @@ exports.analyze = async function() {
   } catch (error) {
     core.setFailed(error.message);
   }
-}
+};
