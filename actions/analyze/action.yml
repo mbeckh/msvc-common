@@ -9,11 +9,11 @@ inputs:
   projects:
     description: 'The name(s) of the project(s), separated by comma, semicolon or newline'
     required: true
-  configuration:
-    description: 'The name of the configuration to build'
+  configurations:
+    description: 'The name of the configurations to build'
     required: true
-  platform:
-    description: 'The platform for which to build'
+  platforms:
+    description: 'The platforms for which to build'
     required: false
     default: 'x64'
   codacy-token:

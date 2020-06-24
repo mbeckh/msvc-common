@@ -99,7 +99,7 @@ exports.build = async function() {
     const platform = core.getInput('platform') || 'x64';
 
     core.startGroup(`Building projects ${projects.join(', ')}`);
-    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, `/t:${projects.join(';')}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}` ], { 'cwd': solutionPath.win });
+    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, '/m', `/t:${projects.join(';')}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}` ], { 'cwd': solutionPath.win });
     core.endGroup();
   } catch (error) {
     core.setFailed(error.message);
@@ -188,15 +188,20 @@ exports.analyze = async function() {
     const solutionName = getRepositoryName();
     const solutionPath = getSolutionPath();
     const projects = getProjects();
-    const configuration = core.getInput('configuration', { 'required': true });
-    const platform = core.getInput('platform');
+    const configurations = core.getInput('configurations', { 'required': true }).split(/\s*[,;]\s*/).filter((e) => e !== '');
+    const platforms = core.getInput('platforms');
     const codacyToken = core.getInput('codacy-token', { 'required': true });
     core.setSecret(codacyToken);
 
-    core.startGroup(`Running code analysis on ${projects.join(', ')}`);
-    const projectsArg = projects.join(';');
-    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, `/t:"${projectsArg}"`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}`, `/p:AnalyzeProjects="${projectsArg}"`, '/p:EnableMicrosoftCodeAnalysis=false', '/p:EnableClangTidyCodeAnalysis=true'], { 'cwd': solutionPath.win, 'ignoreReturnCode': true, 'windowsVerbatimArguments': true });
-    core.endGroup();
+    for (const plaform of platforms) {
+      for (const configuration of configurations) {
+        core.startGroup(`Running code analysis on ${projects.join(', ')} for configuration ${configuration} on ${platform}`);
+        const targetsArg = projects.map((e) => `$(e):ClangTidy`).join(';');
+        const projectsArg = projects.join(';');
+        await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, '/m', `/t:${targetsArg}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}`, `/p:AnalyzeProjects="${projectsArg}"`, '/p:EnableMicrosoftCodeAnalysis=false', '/p:EnableClangTidyCodeAnalysis=true'], { 'cwd': solutionPath.win, 'ignoreReturnCode': true, 'windowsVerbatimArguments': true });
+        core.endGroup();
+      }
+    }
 
     core.startGroup('Sending code analysis to codacy');
     await exec.exec('bash', [ '-c', `find ${solutionPath.nix}/obj/ -name '*.ClangTidy.log' -exec cat {} \\; | java -jar ${bashToolPath}/codacy-clang-tidy.jar | sed -r -e "s#[\\\\]{2}#/#g; s#ClangTidy_clang-#clang-#g" > ${solutionPath.nix}/bin/clang-tidy.json` ]);

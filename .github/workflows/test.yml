@@ -10,6 +10,9 @@ jobs:
   test:
     name: Testing
     runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [ Debug, Release ]
 
     steps:
     - name: Checkout
@@ -20,21 +23,23 @@ jobs:
       with:
         solution-path: actions/test
         projects: main, main_Test
-        configuration: Debug
+        configuration: ${{ matrix.configuration }}
 
     - name: Run 'run' action
+      if: matrix.configuration != 'Debug'
       uses: ./actions/run
       with:
         solution-path: actions/test
         projects: main_Test
-        configuration: Debug
+        configuration: ${{ matrix.configuration }}
 
     - name: Run 'coverage' action
+      if: matrix.configuration == 'Debug'
       uses: ./actions/coverage
       with:
         solution-path: actions/test
         projects: main_Test
-        configuration: Debug
+        configuration: ${{ matrix.configuration }}
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
 
   analyze:
@@ -50,5 +55,5 @@ jobs:
       with:
         solution-path: actions/test
         projects: main
-        configuration: Debug
+        configurations: [ Debug, Release ]
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}

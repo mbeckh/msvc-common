@@ -1,5 +1,9 @@
 # msvc-common
-Common settings for C++ projects created in Microsoft Visual Studio. This documents the conventions as well as my best-practices for projects in Visual Studio. It also helps to solve the problem that all parts of a binary must use the same settings for particular build settings such as exception handling, character set and runtime library mode.
+Common settings for C++ projects created in Microsoft Visual Studio. This documents the conventions as well as my
+best-practices for projects in Visual Studio. It also helps to solve the problem that all parts of a binary must 
+use the same settings for particular build settings such as exception handling, character set and runtime library mode.
+
+The project also contains some actions for automating the builds on Github.
 
 ## Directory Layout
 The common settings are based on the following directory layout.
@@ -86,3 +90,48 @@ This folder is home of all source files and internal includes.
 
 ### `test/`
 This folder is home of all source files for automated tests.
+
+## Actions
+The actions allow running a full CI pipeline with build, test and code metrics for Visual Studio/MSBuild on Github.
+
+### Pre-requisites
+The actions run on Windows builds only.
+
+### msvc-common/actions/build
+The action runs a build using MSBuild on one or multiple projects.
+
+#### Inputs
+-   `solution-path` - If the solution file is not in the project root, provide the relative folder path (optional, defaults to project root folder).
+-   `projects` - The comma, semicolon or newline separated list of projects to build (required).
+-   `configuration` - The name of the configuration to build (required).
+-   `platform` - The name of the platform for which to build (optional, defaults to `x64`).
+
+### msvc-common/actions/run
+The action runs a binary produced by a previous build.
+
+#### Inputs
+-   `solution-path` - If the solution file is not in the project root, provide the relative folder path (optional, defaults to project root folder).
+-   `projects` - The comma, semicolon or newline separated list of projects to run (required).
+-   `configuration` - The name of the configuration to run (required).
+-   `platform` - The name of the platform (optional, defaults to `x64`).
+
+### msvc-common/actions/coverage
+The action runs a coverage analysis on a binary produced by a previous build.
+
+#### Inputs
+-   `solution-path` - If the solution file is not in the project root, provide the relative folder path (optional, defaults to project root folder).
+-   `projects` - The comma, semicolon or newline separated list of projects to run (required). Please provide the name of the test binary, not the name of the project containing the code to test.
+-   `configuration` - The name of the configuration to build (required).
+-   `platform` - The name of the platform for which to build (optional, defaults to `x64`).
+-   `codacy-token` - The value of the Codacy.com project API token (required).
+
+### msvc-common/actions/analyze
+The action runs a clang-tidy analysis on the sources of one or multiple projects. The action runs the analyses for multiple 
+configurations or platforms and then sends the aggregated results to Codacy in a single batch.
+
+#### Inputs
+-   `solution-path` - If the solution file is not in the project root, provide the relative folder path (optional, defaults to project root folder).
+-   `projects` - The comma, semicolon or newline separated list of projects to build (required).
+-   `configurations` - A list of all configurations to build (required).
+-   `platforms` - A list of all platforms for which to build (optional, defaults to `x64`).
+-   `codacy-token` - The value of the Codacy.com project API token (required).
