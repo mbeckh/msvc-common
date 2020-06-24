@@ -94,7 +94,7 @@ exports.build = async function() {
     const platform = core.getInput('platform') || 'x64';
 
     core.startGroup(`Building projects ${projects.join(', ')}`);
-    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, `/t:"${projects.join(';')}"`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}` ], { 'cwd': solutionPath, 'windowsVerbatimArguments': true });
+    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, `/t:${projects.join(';')}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}` ], { 'cwd': solutionPath });
     core.endGroup();
   } catch (error) {
     core.setFailed(error.message);
