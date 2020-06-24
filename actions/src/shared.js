@@ -193,7 +193,7 @@ exports.analyze = async function() {
     const codacyToken = core.getInput('codacy-token', { 'required': true });
     core.setSecret(codacyToken);
 
-    for (const plaform of platforms) {
+    for (const platform of platforms) {
       for (const configuration of configurations) {
         core.startGroup(`Running code analysis on ${projects.join(', ')} for configuration ${configuration} on ${platform}`);
         const targetsArg = projects.map((e) => `$(e):ClangTidy`).join(';');
