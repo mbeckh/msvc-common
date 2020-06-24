@@ -1,0 +1,24 @@
+name: 'Analyze Action'
+author: 'Michael Beckh'
+description: 'Analyze code using clang-tidy and send results to codacy'
+inputs:
+  solution-path:
+    description: 'The relative path of the solution file'
+    required: false
+    default: '.'
+  projects:
+    description: 'The name(s) of the project(s), separated by comma, semicolon or newline'
+    required: true
+  configuration:
+    description: 'The name of the configuration to build'
+    required: true
+  platform:
+    description: 'The platform for which to build'
+    required: false
+    default: 'x64'
+  codacy-token:
+    description: 'The value of the codacy project token'
+    required: true
+runs:
+  using: 'node12'
+  main: './analyze.js'

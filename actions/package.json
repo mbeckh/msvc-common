@@ -1,0 +1,32 @@
+{
+  "name": "shared",
+  "version": "1.0.0",
+  "description": "Github action for running a full CI pipeline with build, test and code metrics",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "ncc build -m -o dist src/shared.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mbeckh/build-action.git"
+  },
+  "keywords": [
+    "actions",
+    "build",
+    "coverage"
+  ],
+  "author": "Michael Beckh",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/mbeckh/msvc-common/issues"
+  },
+  "homepage": "https://github.com/mbeckh/msvc-common#readme",
+  "dependencies": {
+    "@actions/cache": "^0.2.1",
+    "@actions/core": "^1.2.4",
+    "@actions/exec": "^1.0.4"
+  },
+  "devDependencies": {
+    "@zeit/ncc": "^0.20.5"
+  }
+}
