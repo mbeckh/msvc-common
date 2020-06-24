@@ -111,7 +111,7 @@ exports.run = async function() {
 
     for (project of projects) {
       core.startGroup(`Running ${project}`);
-      await exec.exec(`${project}_${platform}${suffix}.exe`, [ ], { 'cwd': solutionPath + '\\bin' });
+      await exec.exec(`${env.GITHUB_WORKSPACE}\\${solutionPath}\\bin\\${project}_${platform}${suffix}.exe`, [ ], { 'cwd': solutionPath + '\\bin' });
       core.endGroup();
     }
   } catch (error) {
@@ -148,12 +148,13 @@ exports.coverage = async function() {
       
     for (project of projects) {
       core.startGroup('Getting code coverage');
+      const path = `${env.GITHUB_WORKSPACE}\\${solutionPath}`.replace(/\\\.$/, ''); // remove trailing \. for OpenCppCoverage args
       await exec.exec('OpenCppCoverage.exe',
-                      [`--modules=${solutionPath}\\`,
-                       `--excluded_modules=${solutionPath}\\lib\\`,
-                       `--sources=${solutionPath}\\`,
-                       `--excluded_sources=${solutionPath}\\lib\\`,
-                       `--excluded_sources=${solutionPath}\\test\\`,
+                      [`--modules=${path}\\`,
+                       `--excluded_modules=${path}\\lib\\`,
+                       `--sources=${path}\\`,
+                       `--excluded_sources=${path}\\lib\\`,
+                       `--excluded_sources=${path}\\test\\`,
                        `--export_type=cobertura:${project}_coverage.xml`,
                        '--', `${project}_${platform}${suffix}.exe` ], { 'cwd': solutionPath + '\\bin' });
       core.endGroup();
