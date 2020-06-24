@@ -1,0 +1,21 @@
+name: 'Build Action'
+author: 'Michael Beckh'
+description: 'Build code using MSBuild'
+inputs:
+  solution-path:
+    description: 'The relative path of the solution file'
+    required: false
+    default: '.'
+  projects:
+    description: 'The name(s) of the project(s), separated by comma, semicolon or newline'
+    required: true
+  configuration:
+    description: 'The name of the configuration to build'
+    required: true
+  platform:
+    description: 'The platform for which to build'
+    required: false
+    default: 'x64'
+runs:
+  using: 'node12'
+  main: './build.js'
