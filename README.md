@@ -1,4 +1,8 @@
 # msvc-common
+[![Release](https://img.shields.io/github/v/tag/mbeckh/msvc-common?label=Release&style=flat-square)](https://github.com/mbeckh/msvc-common/releases/)
+[![Tests](https://img.shields.io/github/workflow/status/mbeckh/msvc-common/test/master?label=Tests&logo=GitHub&style=flat-square)](https://github.com/mbeckh/msvc-common/actions)
+[![License](https://img.shields.io/github/license/mbeckh/msvc-common?label=License&style=flat-square)](https://github.com/mbeckh/msvc-common/blob/master/LICENSE)
+
 Common settings for C++ projects created in Microsoft Visual Studio. This documents the conventions as well as my
 best-practices for projects in Visual Studio. It also helps to solve the problem that all parts of a binary must 
 use the same settings for particular build settings such as exception handling, character set and runtime library mode.
@@ -83,15 +87,20 @@ fact, it is this project mapped as a submodule.
 
 -   `BuildConfiguration.props`: Included in the project file a a property sheet. A file with the same name in
     `<root>/msvc/` is detected automatically and MAY be used to override or add settings specific to a solution.
+
 -   `ProjectConfiguration.props`: Include the file after `Microsoft.Cpp.Default.props` in the project file. A file with
      the same name in `<root>/msvc/` is detected automatically and MAY be used to override or add settings specific to a
-	 solution.
+     solution.
+
 -   `args.props`: A property sheet which will add a dependency to args command line parser
     (<https://github.com/Taywee/args>) to a project.
+
 -   `Detours.props`: A property sheet which will add a dependency with include and library paths for Microsoft Detours
     (<https://github.com/Microsoft/Detours>) to a project.
+
 -   `fmt.props`: A property sheet which will add a dependency with include and library paths for {fmt}
     (<https://github.com/fmtlib/fmt>) to a project.
+
 -   `googletest.props`: A property sheet which will add a dependency with include and library paths for googletest
     (<https://github.com/google/googletest>) to a project.
 
@@ -114,47 +123,61 @@ The actions allow running a full CI pipeline with build, test and code metrics f
 ### Pre-requisites
 The actions run on Windows builds only.
 
-### msvc-common/actions/build
+### `msvc-common/actions/build`
 The action runs a build using MSBuild on one or multiple projects.
 
 #### Inputs
 -   `solution-path` - If the solution file is not in the project root, provide the relative folder path
     (optional, defaults to project root folder).
+
 -   `projects` - The comma-, semicolon- or newline-separated list of projects to build (required).
+
 -   `configuration` - The name of the configuration to build (required).
+
 -   `platform` - The name of the platform for which to build (optional, defaults to `x64`).
 
-### msvc-common/actions/run
+### `msvc-common/actions/run`
 The action runs a binary produced by a previous build.
 
 #### Inputs
 -   `solution-path` - If the solution file is not in the project root, provide the relative folder path
     (optional, defaults to project root folder).
+
 -   `projects` - The comma-, semicolon- or newline-separated list of projects to run (required).
+
 -   `configuration` - The name of the configuration to run (required).
+
 -   `platform` - The name of the platform (optional, defaults to `x64`).
 
-### msvc-common/actions/coverage
+### `msvc-common/actions/coverage`
 The action runs a coverage analysis on a binary produced by a previous build.
 
 #### Inputs
 -   `solution-path` - If the solution file is not in the project root, provide the relative folder path
     (optional, defaults to project root folder).
--   `projects` - The comma-, semicolon- or newline-separated list of projects to run (required). Please provide the name
-     of the test binary, not the name of the project containing the code to test.
+
+-   `projects` - The comma-, semicolon- or newline-separated list of projects to run (required).
+    Please provide the name of the test binary, not the name of the project containing the code to test.
+
 -   `configuration` - The name of the configuration to build (required).
+
 -   `platform` - The name of the platform for which to build (optional, defaults to `x64`).
+
 -   `codacy-token` - The value of the Codacy.com project API token (required).
 
-### msvc-common/actions/analyze
+### `msvc-common/actions/analyze`
 The action runs a clang-tidy analysis on the sources of one or multiple projects. The action runs the analyses for
 multiple configurations or platforms and then sends the aggregated results to Codacy in a single batch.
 
 #### Inputs
 -   `solution-path` - If the solution file is not in the project root, provide the relative folder path
     (optional, defaults to project root folder).
+
 -   `projects` - The comma-, semicolon- or newline-separated list of projects to build (required).
+
 -   `configurations` - A comma- or semicolon-separated list of all configurations to build (required).
+
 -   `platforms` - A comma- or semicolon-separated list of all platforms for which to build
     (optional, defaults to `x64`).
+
 -   `codacy-token` - The value of the Codacy.com project API token (required).
