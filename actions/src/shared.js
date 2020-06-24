@@ -172,7 +172,7 @@ exports.coverage = async function() {
     await exec.exec('bash', [ '-c', `./.codacy-coverage.sh report -r '${solutionPath.nix}/bin/*_coverage.xml' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
 
     if (!codacyCoverageCacheId) {
-      codacyCoverageCacheId = await saveCache([ '.codacy-coverage' ], codacyCacheKey);
+      await saveCache([ '.codacy-coverage' ], codacyCacheKey);
       core.info(`Added .codacy-coverage to cache`);
     }
     core.endGroup();
