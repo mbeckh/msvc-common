@@ -189,7 +189,7 @@ exports.analyze = async function() {
     const solutionPath = getSolutionPath();
     const projects = getProjects();
     const configurations = core.getInput('configurations', { 'required': true }).split(/\s*[,;]\s*/).filter((e) => e !== '');
-    const platforms = core.getInput('platforms');
+    const platforms = core.getInput('platforms').split(/\s*[,;]\s*/).filter((e) => e !== '');
     const codacyToken = core.getInput('codacy-token', { 'required': true });
     core.setSecret(codacyToken);
 
