@@ -43,14 +43,8 @@ jobs:
         configuration: ${{ matrix.configuration }}
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
 
-  list:
-    runs-on: windows-latest
-    steps:
-    - run: vswhere -find "**/clang-tidy.exe"
-
   analyze:
     name: Analyzing
-    if: 0 == 1
     runs-on: windows-latest
 
     steps:
