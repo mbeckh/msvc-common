@@ -210,6 +210,8 @@ exports.analyzeClangTidy = async function() {
     const prefixLength = env.GITHUB_WORKSPACE.length + solutionPath.win.length + 2;
     const files = (await sourceGlobber.glob());
     core.info(files);
+    core.info(env.GITHUB_WORKSPACE);
+    core.info(solutionPath.win);
     core.info(env.GITHUB_WORKSPACE.length + solutionPath.win.length + 2);
     core.info(files.map((e) => { e.substring(prefixLength) }));
 
