@@ -209,9 +209,9 @@ exports.analyzeClangTidy = async function() {
     const sourceGlobber = await glob.create([ '!.mbeckh/**', '!lib/**', '**/*.c', '**/*.cc', '**/*.cpp', '**/*.cxx', '**/*.h', '**/*.hpp' ].join('\n'));
     const prefixLength = env.GITHUB_WORKSPACE.length + solutionPath.win.length + 2;
     const files = (await sourceGlobber.glob());
-    cor.info(files);
-    cor.info(env.GITHUB_WORKSPACE.length + solutionPath.win.length + 2);
-    cor.info(files.map((e) => { e.substring(prefixLength) }));
+    core.info(files);
+    core.info(env.GITHUB_WORKSPACE.length + solutionPath.win.length + 2);
+    core.info(files.map((e) => { e.substring(prefixLength) }));
 
     core.startGroup('Running code analysis');
     await exec.exec(`"${CLANGTIDY_PATH}" ${files.join(' ')} -- --system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs} > ${env.GITHUB_WORKSPACE}\\.mbeckh\\clang-tidy-${hex}.log`, [ ], { 'cwd': solutionPath.win, 'windowsVerbatimArguments': true, 'ignoreReturnCode': true });
