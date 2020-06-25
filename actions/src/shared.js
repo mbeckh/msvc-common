@@ -1,12 +1,16 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
 const cache = require('@actions/cache');
+const github = require('@actions/github');
 const glob = require('@actions/glob');
 const io = require('@actions/io');
 const fs = require('fs');
 const crypto = require('crypto');
+const os = require('os');
+const path = require('path');
 
 const env = process.env;
+const tempPath = '.mbeckh';
 
 const MSBUILD_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\MSBuild\\Current\\Bin\\MSBuild.exe';
 const CL_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Tools\\MSVC\\*\\bin\\Hostx64\\x64\\cl.exe';
@@ -19,7 +23,7 @@ const CODACYCLANGTIDY_URL = `https://github.com/codacy/codacy-clang-tidy/release
 
 async function saveCache(paths, key) {
   try {
-    return await cache.saveCache(paths.map((e) => e.replace('\\', '/')), key);
+    return await cache.saveCache(paths.map((e) => path.posix.normalize(e)), key);
   } catch (error) {
     // failures in caching should not abort the job
     core.warning(error.message);
@@ -29,7 +33,7 @@ async function saveCache(paths, key) {
 
 async function restoreCache(paths, key, altKeys) {
   try {
-    return await cache.restoreCache(paths.map((e) => e.replace('\\', '/')), key, altKeys);
+    return await cache.restoreCache(paths.map((e) => path.posix.normalize(e)), key, altKeys);
   } catch (error) {
     // failures in caching should not abort the job
     core.warning(error.message);
@@ -38,47 +42,66 @@ async function restoreCache(paths, key, altKeys) {
 }
 
 async function setupOpenCppCoverage() {
-  const path = '.mbeckh\\OpenCppCoverage';
-  const key = `opencppcoverage-${OPENCPPCOVERAGE_VERSION}`;
+  const toolPath = path.join(tempPath, 'OpenCppCoverage');
   
   core.startGroup('Installing OpenCppCoverage');
-  if (await restoreCache([ path ], key)) {
-    core.info(`Found OpenCppCoverage in ${path}`);
+  core.info('Getting latest release for OpenCppCoverage');
+  const release = await octokit.repos.getLatestRelease({ 'owner':'OpenCppCoverage', 'repo': 'OpenCppCoverage' });
+  const asset = release.assets.filter((e) => /-x64-.*\.exe$/.matches(e.name));
+  const key = `opencppcoverage-${asset.id}`;
+
+  if (await restoreCache([ toolPath ], key)) {
+    core.info(`Found ${release.name} in ${toolPath}`);
   } else {
     // Install "by hand" because running choco on github is incredibly slow
-    core.info(`Downloading innoextract from ${INNOEXTRACT_URL}`);
-    await exec.exec('curl', [ '-s', '-S', '-L', '-o.mbeckh\\innoextract.zip', '--create-dirs', INNOEXTRACT_URL ]);
-    core.info('Unpacking innoextract');
-    await exec.exec('7z', [ 'x', '-aos', '-o.mbeckh', '.mbeckh\\innoextract.zip', 'innoextract.exe' ]);
-    core.info(`Downloading OpenCppCoverage from ${OPENCPPCOVERAGE_URL}`);
-    await exec.exec('curl', [ '-s', '-S', '-L', '-o.mbeckh\\OpenCppCoverageSetup.exe', '--create-dirs', OPENCPPCOVERAGE_URL ]);
-    core.info('Unpacking OpenCppCoverage');
-    await exec.exec('.mbeckh/innoextract.exe', [ '-e', '-m', '--output-dir', path, '.mbeckh\\OpenCppCoverageSetup.exe', ]);
+    const octokit = github.getOctokit();
+    {
+      core.info('Getting latest release for innoextract');
+      const release = await octokit.repos.getLatestRelease({ 'owner':'dscharrer', 'repo': 'innoextract' });
+      const asset = release.assets.filter((e) => /-windows\.zip$/.matches(e.name));
+      core.info(`Downloading ${release.name} from ${asset.browser_download_url}`);
+      
+      const downloadPath = path.join(tempPath, asset.name);
+      await exec.exec('curl', [ '-s', '-S', '-L', `-o${downloadPath}`, '--create-dirs', asset.browser_download_url ]);
+      core.info('Unpacking innoextract');
+      await exec.exec('7z', [ 'x', '-aos', `-o${tempPath}`, downloadPath, 'innoextract.exe' ]);
+    }
 
-    await saveCache([ path ], key);
-    core.info(`Installed OpenCppCoverage at ${path}`);
+    core.info(`Downloading ${release.name} from ${asset.browser_download_url}`);
+
+    const downloadPath = path.join(tempPath, asset.name);
+    await exec.exec('curl', [ '-s', '-S', '-L', `-o${downloadPath}`, '--create-dirs', asset.browser_download_url ]);
+    core.info('Unpacking OpenCppCoverage');
+    await exec.exec(path.join(tempPath, 'innoextract'), [ '-e', '-m', '--output-dir', toolPath, downloadPath ]);
+
+    await saveCache([ toolPath ], key);
+    core.info(`Installed ${release.name} at ${toolPath}`);
   }
-  const appPath = `${path}\\app`;
-  core.addPath(`${env.GITHUB_WORKSPACE}\\${appPath}`);
+  core.addPath(path.resolve(toolPath, 'app'));
   core.endGroup();
   return appPath;
 }
 
 async function setupCodacyClangTidy() {
-  const path = '.mbeckh\\codacy-clang-tidy';
-  const key = `codacy-clang-tidy-${CODACYCLANGTIDY_VERSION}`;
+  const toolPath = path.join(tempPath, 'codacy-clang-tidy');
 
   core.startGroup('Installing codacy-clang-tidy');
-  if (await restoreCache([ path ], key)) {
-    core.info(`Found codacy-clang-tidy in cache at ${path}`);
+  core.info('Getting latest release for innoextract');
+  const release = await octokit.repos.getLatestRelease({ 'owner':'codacy', 'repo': 'codacy-clang-tidy' });
+  const asset = release.assets.filter((e) => /\.jar$/.matches(e.name));
+  const key = `codacy-clang-tidy-${asset.id}`;
+  
+  if (await restoreCache([ toolPath ], key)) {
+    core.info(`Found codacy-clang-tidy ${release.tag_name} in cache at ${toolPath}`);
   } else {
-    core.info(`Downloading codacy-clang-tidy from ${CODACYCLANGTIDY_URL}`);
-    await exec.exec('curl', [ '-s', '-S', '-L', `-o${path}\\codacy-clang-tidy.jar`, '--create-dirs', CODACYCLANGTIDY_URL ]);
-    await saveCache([ path ], key);
-    core.info(`Downloaded codacy-clang-tidy at ${path}`);
+    core.info(`Downloading codacy-clang-tidy ${release.tag_name} from ${asset.browser_download_url}`);
+
+    await exec.exec('curl', [ '-s', '-S', '-L', `-o${path.join(toolPath, asset.name)}`, '--create-dirs', asset.browser_download_url ]);
+    await saveCache([ toolPath ], key);
+    core.info(`Downloaded codacy-clang-tidy ${release.tag_name} at ${toolPath}`);
   }
   core.endGroup();
-  return path;
+  return path.join(toolPath, asset.name);
 }
 
 function getRepositoryName() {
@@ -86,8 +109,8 @@ function getRepositoryName() {
 }
 
 function getSolutionPath() {
-  const path = core.getInput('solution-path').replace('/', '\\').replace(/\\$/, ''); // ensure windows paths, strip trailing \ from path
-  return { win: path, nix: path.replace('\\', '/') };
+  const solutionPath = path.posix.normalize(core.getInput('solution-path')).replace(/\/+$/, ''); // remove trailing slashes
+  return path.normalize(solutionPath);
 }
 
 function getProjects() {
@@ -100,10 +123,10 @@ exports.build = async function() {
     const solutionName = getRepositoryName();
     const projects = getProjects();
     const configuration = core.getInput('configuration', { 'required': true });
-    const platform = core.getInput('platform') || 'x64';
+    const platform = core.getInput('platform');
 
     core.startGroup(`Building projects ${projects.join(', ')}`);
-    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, '/m', `/t:${projects.join(';')}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}` ], { 'cwd': solutionPath.win });
+    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, '/m', `/t:${projects.join(';')}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}` ], { 'cwd': solutionPath });
     core.endGroup();
   } catch (error) {
     core.setFailed(error.message);
@@ -120,7 +143,7 @@ exports.run = async function() {
 
     for (const project of projects) {
       core.startGroup(`Running ${project}`);
-      await exec.exec(`${env.GITHUB_WORKSPACE}\\${solutionPath.win}\\bin\\${project}_${platform}${suffix}.exe`, [ ], { 'cwd': solutionPath.win + '\\bin' });
+      await exec.exec(path.join(env.GITHUB_WORKSPACE, solutionPath, 'bin', `${project}_${platform}${suffix}`), [ ], { 'cwd': path.join(solutionPath, 'bin') });
       core.endGroup();
     }
   } catch (error) {
@@ -141,8 +164,9 @@ exports.coverage = async function() {
     core.setSecret(codacyToken);
 
     core.startGroup('Loading codacy coverage reporter');
-    await exec.exec('curl -LsS https://coverage.codacy.com/get.sh -o .codacy-coverage.sh');
-    const file = fs.readFileSync('.codacy-coverage.sh');
+    const codacyScript = '.codacy-coverage.sh';
+    await exec.exec('curl', ['-s', '-S', '-L', `-o${codacyScript}`, 'https://coverage.codacy.com/get.sh' ]);
+    const file = fs.readFileSync(codacyScript);
     const hash = crypto.createHash('sha256');
     hash.update(file);
     const hex = hash.digest('hex');
@@ -156,24 +180,24 @@ exports.coverage = async function() {
       
     for (const project of projects) {
       core.startGroup('Getting code coverage');
-      const path = `${env.GITHUB_WORKSPACE}\\${solutionPath.win}`.replace(/\\\.$/, ''); // remove trailing \. for OpenCppCoverage args
-      await exec.exec('OpenCppCoverage.exe',
-                      [`--modules=${path}\\`,
-                       `--excluded_modules=${path}\\lib\\`,
-                       `--sources=${path}\\`,
-                       `--excluded_sources=${path}\\lib\\`,
-                       `--excluded_sources=${path}\\test\\`,
+      const rootPath = path.join(env.GITHUB_WORKSPACE, solutionPath, path.sep);
+      await exec.exec('OpenCppCoverage',
+                      [`--modules=${rootPath}`,
+                       `--excluded_modules=${path.join(rootPath, 'lib', path.sep)}`,
+                       `--sources=${rootPath}`,
+                       `--excluded_sources=${path.join(rootPath, 'lib', path.sep)}`,
+                       `--excluded_sources=${path.join(rootPath, 'test', path.sep)}`,
                        `--export_type=cobertura:${project}_coverage.xml`,
-                       '--', `${project}_${platform}${suffix}.exe` ], { 'cwd': solutionPath.win + '\\bin' });
+                       '--', `${project}_${platform}${suffix}` ], { 'cwd': path.join(solutionPath, 'bin') });
       core.endGroup();
     }
 
     core.startGroup('Sending coverage to codecov');
-    await exec.exec('bash', [ '-c', `bash <(curl -sS https://codecov.io/bash) -Z -f '${solutionPath.nix}/bin/*_coverage.xml'` ]);
+    await exec.exec('bash', [ '-c', `bash <(curl -sS https://codecov.io/bash) -Z -f '${path.posix.join(solutionPath, 'bin', '*_coverage.xml')}'` ]);
     core.endGroup();
 
     core.startGroup('Sending coverage to codacy');
-    await exec.exec('bash', [ '-c', `./.codacy-coverage.sh report -r '${solutionPath.nix}/bin/*_coverage.xml' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
+    await exec.exec('bash', [ '-c', `${path.posix.join('.', codacyScript)} report -r '${path.posix.join(solutionPath, 'bin', '*_coverage.xml')}' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
 
     if (!codacyCoverageCacheId) {
       await saveCache([ '.codacy-coverage' ], codacyCacheKey);
@@ -187,37 +211,37 @@ exports.coverage = async function() {
 
 exports.analyzeClangTidy = async function() {
   try {
+    const id = core.getInput('id', { 'required': true });
+    const exclude = core.getInput('exclude').split('\s*[\n]\s*').filter((e) => e != '').map((e) => `!${path.posix.normalize(e)}`);
     const clangArgs = core.getInput('clang-args');
-    const solutionPath = getSolutionPath();
 
     core.startGroup('Getting version of MSVC compiler');
     const clGlobber = await glob.create(CL_PATH);
     const cl = await clGlobber.glob();
     
-    fs.mkdirSync('.mbeckh');
-    const versionFilePath = '.mbeckh\\msc-version.cpp';
+    fs.mkdirSync(tempPath);
+    const versionFilePath = path.join(tempPath, 'msc-version.cpp');
     fs.writeFileSync(versionFilePath, '_MSC_VER');
     let version = '';
     await exec.exec(`"${cl[0]}"`, [ '/EP', versionFilePath ], { 'listeners': { 'stdout': (data) => { version += data.toString(); }}});
     version = /([0-9]+)/.exec(version)[1];
     core.endGroup();
     
-    const hash = crypto.createHash('sha256');
-    hash.update(clangArgs);
-    const hex = hash.digest('hex');
+    const sourceGlobber = await glob.create(exclude.concat([ `!${tempPath}`, '!lib', '**/*.c', '**/*.cc', '**/*.cpp', '**/*.cxx', '**/*.h', '**/*.hpp' ]).join('\n'));
+    const workspace = env.GITHUB_WORKSPACE;
 
-    const sourceGlobber = await glob.create([ '!.mbeckh/**', '!lib/**', '**/*.c', '**/*.cc', '**/*.cpp', '**/*.cxx', '**/*.h', '**/*.hpp' ].join('\n'));
-    const prefixLength = env.GITHUB_WORKSPACE.length + solutionPath.win.length + 2;
-    const files = (await sourceGlobber.glob());
-    core.info(files);
-    core.info(env.GITHUB_WORKSPACE);
-    core.info(solutionPath.win);
-    core.info(env.GITHUB_WORKSPACE.length + solutionPath.win.length + 2);
-    core.info(files.map((e) => { e.substring(prefixLength) }));
-
-    core.startGroup('Running code analysis');
-    await exec.exec(`"${CLANGTIDY_PATH}" ${files.join(' ')} -- --system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs} > ${env.GITHUB_WORKSPACE}\\.mbeckh\\clang-tidy-${hex}.log`, [ ], { 'cwd': solutionPath.win, 'windowsVerbatimArguments': true, 'ignoreReturnCode': true });
+    const cpus = os.cpus().length;
+    core.startGroup('Running code analysis with ${cpus} threads');
+    const throat = require('throat')(cpus);
+    let processes = [ ];
+    let index = 0;
+    for (const file of sourceGlobber.globGenerator()) {
+      const logFile = `clang-tidy-${id}-${path.basename(file).replace('.', '_')}-${index}.log`;
+      const promise = throat(() => exec.exec(`"${CLANGTIDY_PATH}" ${path.relative(workspace, file)} -- --system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs} > ${path.join(tempPath, logFile)}`, [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true }));
+      processes.push(promise);
+    }
     core.endGroup();
+    return Promise.all(processes);
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -225,14 +249,15 @@ exports.analyzeClangTidy = async function() {
 
 exports.analyzeReport = async function() {
   try {
-    const bashToolPath = (await setupCodacyClangTidy()).replace('\\', '/');
+    const toolPath = await setupCodacyClangTidy();
 
     const codacyToken = core.getInput('codacy-token', { 'required': true });
     core.setSecret(codacyToken);
 
     core.startGroup('Sending code analysis to codacy');
-    await exec.exec('bash', [ '-c', `find .mbeckh/ -maxdepth 1 -name 'clang-tidy-*.log' -exec cat {} \\; | java -jar ${bashToolPath}/codacy-clang-tidy.jar | sed -r -e "s#[\\\\]{2}#/#g" > .mbeckh/clang-tidy.json` ]);
-    await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" -d @.mbeckh/clang-tidy.json "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/issuesRemoteResults"` ]);
+    const logFile = path.posix.join(tempPath, 'clang-tidy.json');
+    await exec.exec('bash', [ '-c', `find ${path.posix.join(tempPath, path.posix.sep)} -maxdepth 1 -name 'clang-tidy-*.log' -exec cat {} \\; | java -jar ${toolPath} | sed -r -e "s#[\\\\]{2}#/#g" > ${logFile}` ]);
+    await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" -d @${logFile} "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/issuesRemoteResults"` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/resultsFinal"` ]);
     core.endGroup();
   } catch (error) {

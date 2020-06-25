@@ -2,10 +2,13 @@ name: 'Analyze With clang-tidy Action'
 author: 'Michael Beckh'
 description: 'Analyze code using clang-tidy'
 inputs:
-  solution-path:
-    description: 'The relative path of the solution file'
+  id:
+    description: 'Optional id of the job if multiple run in parallel'
+    required: true
+  exclude:
+    description: 'Additional patterns to exclude from parsing'
     required: false
-    default: '.'
+    default: ''
   clang-args:
     description: 'Additional arguments to pass to clang'
     required: false
