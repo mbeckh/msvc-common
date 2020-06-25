@@ -206,11 +206,11 @@ exports.analyzeClangTidy = async function() {
     hash.update(clangArgs);
     const hex = hash.digest('hex');
 
-    const sourceGlobber = await glob.create('**.c\n**.cc\n**.cpp\n**.cxx\n**.h\n**.hpp');
+    const sourceGlobber = await glob.create('**/*.c\n**/*.cc\n**/*.cpp\n**/*.cxx\n**/*.h\n**/*.hpp');
     const files = await sourceGlobber.glob();
 
     core.startGroup('Running code analysis');
-    await exec.exec(`"${CLANGTIDY_PATH} ${files.join(' ')} -- --system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs} > ${env.GITHUB_WORKSPACE}\\.mbeckh\\clang-tidy-${hex}.log`, [ ], { 'cwd': solutionPath.win, 'windowsVerbatimArguments': true });
+    await exec.exec(`"${CLANGTIDY_PATH}" ${files.join(' ')} -- --system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs} > ${env.GITHUB_WORKSPACE}\\.mbeckh\\clang-tidy-${hex}.log`, [ ], { 'cwd': solutionPath.win, 'windowsVerbatimArguments': true });
     core.endGroup();
   } catch (error) {
     core.setFailed(error.message);
