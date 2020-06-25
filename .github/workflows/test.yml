@@ -9,6 +9,7 @@ on:
 jobs:
   test:
     name: Testing
+    if: 0 == 1
     runs-on: windows-latest
     strategy:
       matrix:
@@ -42,8 +43,17 @@ jobs:
         configuration: ${{ matrix.configuration }}
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
 
+  list:
+    runs-on: windows-latest
+    steps:
+    - run: |
+        dir "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VCTools"
+        dir "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VCTools\Llvm"
+        dir "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VCTools\Llvm\x64"
+      shell: cmd
   analyze:
     name: Analyzing
+    if: 0 == 1
     runs-on: windows-latest
 
     steps:
