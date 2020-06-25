@@ -46,11 +46,8 @@ jobs:
   list:
     runs-on: windows-latest
     steps:
-    - run: |
-        dir "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VCTools"
-        dir "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VCTools\Llvm"
-        dir "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VCTools\Llvm\x64"
-      shell: cmd
+    - run: vswhere -find "**/clang-tidy.exe"
+
   analyze:
     name: Analyzing
     if: 0 == 1
