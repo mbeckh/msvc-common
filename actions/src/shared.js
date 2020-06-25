@@ -198,7 +198,7 @@ exports.analyzeClangTidy = async function() {
     const versionFilePath = '.mbeckh\\msc-version.cpp';
     fs.writeFileSync(versionFilePath, '_MSC_VER');
     let version = '';
-    await exec.exec(`"${cl[0]}"`, [ '/EP', versionFilePath ], { 'listeners': { 'stdout': (data) => { version += data.toString(); }}});
+    await exec.exec(cl[0], [ '/EP', versionFilePath ], { 'listeners': { 'stdout': (data) => { version += data.toString(); }}});
     version = /([0-9]+)/.exec(version)[1];
     core.endGroup();
     
@@ -206,10 +206,10 @@ exports.analyzeClangTidy = async function() {
     hash.update(clangArgs);
     const hex = hash.digest('hex');
 
-    const sourceGlobber = await glob.create(`**.c\n**.cc\n**.cpp\n**.cxx\n**.h\n**.hpp`);
+    const sourceGlobber = await glob.create('**.c\n**.cc\n**.cpp\n**.cxx\n**.h\n**.hpp');
     const files = await sourceGlobber.glob();
 
-    core.startGroup(`Running code analysis on ${projects.join(', ')} for configuration ${configuration} on ${platform}`);
+    core.startGroup('Running code analysis');
     await exec.exec(`"${CLANGTIDY_PATH} ${files.join(' ')} -- --system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs} > ${env.GITHUB_WORKSPACE}\\.mbeckh\\clang-tidy-${hex}.log`, [ ], { 'cwd': solutionPath.win, 'windowsVerbatimArguments': true });
     core.endGroup();
   } catch (error) {
