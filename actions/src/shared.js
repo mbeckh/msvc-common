@@ -190,6 +190,7 @@ exports.analyzeClangTidy = async function() {
     const clangArgs = core.getInput('clang-args');
     const solutionPath = getSolutionPath();
 
+    core.startGroup('Getting version of MSVC compiler');
     const clGlobber = await glob.create(CL_PATH);
     const cl = await clGlobber.glob();
     
@@ -198,7 +199,9 @@ exports.analyzeClangTidy = async function() {
     fs.writeFileSync(versionFilePath, '_MSC_VER');
     let version = '';
     await exec.exec(`"${cl[0]}"`, [ '/EP', versionFilePath ], { 'listeners': { 'stdout': (data) => { version += data.toString(); }}});
+    console.log('x' + version);
     version = /^[0-9]+$/.exec(version)[0];
+    core.endGroup();
     
     const hash = crypto.createHash('sha256');
     hash.update(clangArgs);
