@@ -2,6 +2,7 @@ const core = require('@actions/core');
 const exec = require('@actions/exec');
 const cache = require('@actions/cache');
 const glob = require('@actions/glob');
+const io = require('@actions/io');
 const fs = require('fs');
 const crypto = require('crypto');
 
@@ -192,6 +193,7 @@ exports.analyzeClangTidy = async function() {
     const clGlobber = await glob.create(CL_PATH);
     const cl = await clGlobber.glob();
     
+    fs.mkdirSync('.mbeckh');
     const versionFilePath = '.mbeckh\\msc-version.cpp';
     fs.writeFileSync(versionFilePath, '_MSC_VER');
     let version = '';
