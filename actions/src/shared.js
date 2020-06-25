@@ -235,7 +235,7 @@ exports.analyzeClangTidy = async function() {
     const throat = require('throat')(cpus);
     let processes = [ ];
     let index = 0;
-    for (const file of sourceGlobber.globGenerator()) {
+    for await (const file of sourceGlobber.globGenerator()) {
       const logFile = `clang-tidy-${id}-${path.basename(file).replace('.', '_')}-${index}.log`;
       const promise = throat(() => exec.exec(`"${CLANGTIDY_PATH}" ${path.relative(workspace, file)} -- --system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs} > ${path.join(tempPath, logFile)}`, [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true }));
       processes.push(promise);

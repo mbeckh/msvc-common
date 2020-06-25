@@ -9,7 +9,6 @@ on:
 jobs:
   test:
     name: Testing
-    if: 0 == 1
     runs-on: windows-latest
     strategy:
       matrix:
