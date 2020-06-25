@@ -198,7 +198,7 @@ exports.analyzeClangTidy = async function() {
     const versionFilePath = '.mbeckh\\msc-version.cpp';
     fs.writeFileSync(versionFilePath, '_MSC_VER');
     let version = '';
-    await exec.exec(cl[0], [ '/EP', versionFilePath ], { 'listeners': { 'stdout': (data) => { version += data.toString(); }}});
+    await exec.exec(`"${cl[0]}"`, [ '/EP', versionFilePath ], { 'listeners': { 'stdout': (data) => { version += data.toString(); }}});
     version = /([0-9]+)/.exec(version)[1];
     core.endGroup();
     
