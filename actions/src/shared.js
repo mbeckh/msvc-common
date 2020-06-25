@@ -206,11 +206,12 @@ exports.analyzeClangTidy = async function() {
     hash.update(clangArgs);
     const hex = hash.digest('hex');
 
-    const sourceGlobber = await glob.create('**/*.c\n**/*.cc\n**/*.cpp\n**/*.cxx\n**/*.h\n**/*.hpp');
-    const files = await sourceGlobber.glob();
+    const sourceGlobber = await glob.create('!.mbeckh/**\n!lib/**\n**/*.c\n**/*.cc\n**/*.cpp\n**/*.cxx\n**/*.h\n**/*.hpp');
+    const prefixLength = env.GITHUB_WORKSPACE.length + solutionPath.win.length + 2;
+    const files = await sourceGlobber.glob().map((e) => { e.substring(prefixLength) });
 
     core.startGroup('Running code analysis');
-    await exec.exec(`"${CLANGTIDY_PATH}" ${files.join(' ')} -- --system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs} > ${env.GITHUB_WORKSPACE}\\.mbeckh\\clang-tidy-${hex}.log`, [ ], { 'cwd': solutionPath.win, 'windowsVerbatimArguments': true });
+    await exec.exec(`"${CLANGTIDY_PATH}" ${files.join(' ')} -- --system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs} > ${env.GITHUB_WORKSPACE}\\.mbeckh\\clang-tidy-${hex}.log`, [ ], { 'cwd': solutionPath.win, 'windowsVerbatimArguments': true, 'ignoreReturnCode': true });
     core.endGroup();
   } catch (error) {
     core.setFailed(error.message);
