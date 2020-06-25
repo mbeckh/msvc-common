@@ -199,8 +199,7 @@ exports.analyzeClangTidy = async function() {
     fs.writeFileSync(versionFilePath, '_MSC_VER');
     let version = '';
     await exec.exec(`"${cl[0]}"`, [ '/EP', versionFilePath ], { 'listeners': { 'stdout': (data) => { version += data.toString(); }}});
-    console.log('x' + version);
-    version = /^[0-9]+$/.exec(version)[0];
+    version = /([0-9]+)/.exec(version)[1];
     core.endGroup();
     
     const hash = crypto.createHash('sha256');
