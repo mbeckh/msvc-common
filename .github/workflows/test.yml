@@ -50,10 +50,12 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Run 'analyze' action
-      uses: ./actions/analyze
+    - name: Run 'analyze-clang-tidy' action
+      uses: ./actions/analyze-clang-tidy
       with:
         solution-path: actions/test
-        projects: main
-        configurations: Debug, Release
+  
+    - name: Run 'analyze-report' action
+      uses: ./actions/analyze-report
+      with:
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}

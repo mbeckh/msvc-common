@@ -1,12 +1,15 @@
 const core = require('@actions/core');
 const exec = require('@actions/exec');
 const cache = require('@actions/cache');
+const glob = require('@actions/glob');
 const fs = require('fs');
 const crypto = require('crypto');
 
 const env = process.env;
 
 const MSBUILD_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\MSBuild\\Current\\Bin\\MSBuild.exe';
+const CL_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Tools\\MSVC\\*\\bin\\Hostx64\\x64\\cl.exe';
+const CLANGTIDY_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\Tools\\Llvm\\x64\\bin\\clang-tidy.exe';
 const OPENCPPCOVERAGE_VERSION = '0.9.9.0';
 const OPENCPPCOVERAGE_URL = `https://github.com/OpenCppCoverage/OpenCppCoverage/releases/download/release-${OPENCPPCOVERAGE_VERSION}/OpenCppCoverageSetup-x64-${OPENCPPCOVERAGE_VERSION}.exe`;
 const INNOEXTRACT_URL = 'https://github.com/dscharrer/innoextract/releases/download/1.8/innoextract-1.8-windows.zip';
@@ -181,31 +184,45 @@ exports.coverage = async function() {
   }
 };
 
-exports.analyze = async function() {
+exports.analyzeClangTidy = async function() {
+  try {
+    const clangArgs = core.getInput('clang-args');
+    const solutionPath = getSolutionPath();
+
+    const clGlobber = await glob.create(CL_PATH);
+    const cl = await clGlobber.glob();
+    
+    const versionFilePath = '.mbeckh\\msc-version.cpp';
+    fs.writeFileSync(versionFilePath, '_MSC_VER');
+    let version = '';
+    await exec.exec(`"${cl[0]}"`, [ '/EP', versionFilePath ], { 'listeners': { 'stdout': (data) => { version += data.toString(); }}});
+    version = /^[0-9]+$/.exec(version)[0];
+    
+    const hash = crypto.createHash('sha256');
+    hash.update(clangArgs);
+    const hex = hash.digest('hex');
+
+    const sourceGlobber = await glob.create(`**.c\n**.cc\n**.cpp\n**.cxx\n**.h\n**.hpp`);
+    const files = await sourceGlobber.glob();
+
+    core.startGroup(`Running code analysis on ${projects.join(', ')} for configuration ${configuration} on ${platform}`);
+    await exec.exec(`"${CLANGTIDY_PATH} ${files.join(' ')} -- --system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs} > ${env.GITHUB_WORKSPACE}\\.mbeckh\\clang-tidy-${hex}.log`, [ ], { 'cwd': solutionPath.win, 'windowsVerbatimArguments': true });
+    core.endGroup();
+  } catch (error) {
+    core.setFailed(error.message);
+  }
+};
+
+exports.analyzeReport = async function() {
   try {
     const bashToolPath = (await setupCodacyClangTidy()).replace('\\', '/');
 
-    const solutionName = getRepositoryName();
-    const solutionPath = getSolutionPath();
-    const projects = getProjects();
-    const configurations = core.getInput('configurations', { 'required': true }).split(/\s*[,;]\s*/).filter((e) => e !== '');
-    const platforms = core.getInput('platforms').split(/\s*[,;]\s*/).filter((e) => e !== '');
     const codacyToken = core.getInput('codacy-token', { 'required': true });
     core.setSecret(codacyToken);
 
-    for (const platform of platforms) {
-      for (const configuration of configurations) {
-        core.startGroup(`Running code analysis on ${projects.join(', ')} for configuration ${configuration} on ${platform}`);
-        const targetsArg = projects.map((e) => `${e}:ClangTidy`).join(';');
-        const projectsArg = projects.join(';');
-        await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, '/m', `/t:${targetsArg}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}`, `/p:AnalyzeProjects="${projectsArg}"`, '/p:EnableMicrosoftCodeAnalysis=false', '/p:EnableClangTidyCodeAnalysis=true'], { 'cwd': solutionPath.win, 'ignoreReturnCode': true, 'windowsVerbatimArguments': true });
-        core.endGroup();
-      }
-    }
-
     core.startGroup('Sending code analysis to codacy');
-    await exec.exec('bash', [ '-c', `find ${solutionPath.nix}/obj/ -name '*.ClangTidy.log' -exec cat {} \\; | java -jar ${bashToolPath}/codacy-clang-tidy.jar | sed -r -e "s#[\\\\]{2}#/#g; s#ClangTidy_clang-#clang-#g" > ${solutionPath.nix}/obj/clang-tidy.json` ]);
-    await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" -d @${solutionPath.nix}/obj/clang-tidy.json "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/issuesRemoteResults"` ]);
+    await exec.exec('bash', [ '-c', `find .mbeckh/ -maxdepth 1 -name 'clang-tidy-*.log' -exec cat {} \\; | java -jar ${bashToolPath}/codacy-clang-tidy.jar | sed -r -e "s#[\\\\]{2}#/#g" > .mbeckh/clang-tidy.json` ]);
+    await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" -d @.mbeckh/clang-tidy.json "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/issuesRemoteResults"` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/resultsFinal"` ]);
     core.endGroup();
   } catch (error) {

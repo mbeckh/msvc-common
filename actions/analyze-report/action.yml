@@ -1,0 +1,10 @@
+name: 'Report to Codacy Action'
+author: 'Michael Beckh'
+description: 'Report clang-tidy analysis results to Codacy'
+inputs:
+  codacy-token:
+    description: 'The value of the codacy project token'
+    required: true
+runs:
+  using: 'node12'
+  main: './analyze-report.js'

@@ -1,0 +1,15 @@
+name: 'Analyze With clang-tidy Action'
+author: 'Michael Beckh'
+description: 'Analyze code using clang-tidy'
+inputs:
+  solution-path:
+    description: 'The relative path of the solution file'
+    required: false
+    default: '.'
+  clang-args:
+    description: 'Additional arguments to pass to clang'
+    required: false
+    default: '-xc++ -std=c++20'
+runs:
+  using: 'node12'
+  main: './analyze-clang-tidy.js'
