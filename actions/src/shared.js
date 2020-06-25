@@ -45,7 +45,9 @@ async function setupOpenCppCoverage() {
   const toolPath = path.join(tempPath, 'OpenCppCoverage');
   
   core.startGroup('Installing OpenCppCoverage');
+  // Install "by hand" because running choco on github is incredibly slow
   core.info('Getting latest release for OpenCppCoverage');
+  const octokit = github.getOctokit();
   const release = await octokit.repos.getLatestRelease({ 'owner':'OpenCppCoverage', 'repo': 'OpenCppCoverage' });
   const asset = release.assets.filter((e) => /-x64-.*\.exe$/.matches(e.name));
   const key = `opencppcoverage-${asset.id}`;
@@ -53,8 +55,6 @@ async function setupOpenCppCoverage() {
   if (await restoreCache([ toolPath ], key)) {
     core.info(`Found ${release.name} in ${toolPath}`);
   } else {
-    // Install "by hand" because running choco on github is incredibly slow
-    const octokit = github.getOctokit();
     {
       core.info('Getting latest release for innoextract');
       const release = await octokit.repos.getLatestRelease({ 'owner':'dscharrer', 'repo': 'innoextract' });
@@ -87,6 +87,7 @@ async function setupCodacyClangTidy() {
 
   core.startGroup('Installing codacy-clang-tidy');
   core.info('Getting latest release for innoextract');
+  const octokit = github.getOctokit();
   const release = await octokit.repos.getLatestRelease({ 'owner':'codacy', 'repo': 'codacy-clang-tidy' });
   const asset = release.assets.filter((e) => /\.jar$/.matches(e.name));
   const key = `codacy-clang-tidy-${asset.id}`;
@@ -219,7 +220,9 @@ exports.analyzeClangTidy = async function() {
     const clGlobber = await glob.create(CL_PATH);
     const cl = await clGlobber.glob();
     
-    fs.mkdirSync(tempPath);
+    const logPath = path.join(tempPath, 'clang-tidy');
+    fs.mkdirSync(logPath, { 'recursive': true });
+
     const versionFilePath = path.join(tempPath, 'msc-version.cpp');
     fs.writeFileSync(versionFilePath, '_MSC_VER');
     let version = '';
@@ -227,17 +230,17 @@ exports.analyzeClangTidy = async function() {
     version = /([0-9]+)/.exec(version)[1];
     core.endGroup();
     
-    const sourceGlobber = await glob.create(exclude.concat([ `!${tempPath}`, '!lib', '**/*.c', '**/*.cc', '**/*.cpp', '**/*.cxx', '**/*.h', '**/*.hpp' ]).join('\n'));
+    const sourceGlobber = await glob.create(exclude.concat([ '**/*.c', '**/*.cc', '**/*.cpp', '**/*.cxx', `!${tempPath}`, '!lib' ]).join('\n'));
     const workspace = env.GITHUB_WORKSPACE;
 
     const cpus = os.cpus().length;
-    core.startGroup('Running code analysis with ${cpus} threads');
+    core.startGroup(`Running code analysis with ${cpus} threads`);
     const throat = require('throat')(cpus);
     let processes = [ ];
     let index = 0;
     for await (const file of sourceGlobber.globGenerator()) {
-      const logFile = `clang-tidy-${id}-${path.basename(file).replace('.', '_')}-${index}.log`;
-      const promise = throat(() => exec.exec(`"${CLANGTIDY_PATH}" ${path.relative(workspace, file)} -- --system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs} > ${path.join(tempPath, logFile)}`, [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true }));
+      const logFile = `${path.basename(file).replace('.', '_')}-${id}-${index++}.log`;
+      const promise = throat(() => exec.exec(`"${CLANGTIDY_PATH}" "--header-filter=.*" ${path.relative(workspace, file)} -- --system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs} > ${path.join(logPath, logFile)}`, [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true }));
       processes.push(promise);
     }
     core.endGroup();
@@ -256,7 +259,7 @@ exports.analyzeReport = async function() {
 
     core.startGroup('Sending code analysis to codacy');
     const logFile = path.posix.join(tempPath, 'clang-tidy.json');
-    await exec.exec('bash', [ '-c', `find ${path.posix.join(tempPath, path.posix.sep)} -maxdepth 1 -name 'clang-tidy-*.log' -exec cat {} \\; | java -jar ${toolPath} | sed -r -e "s#[\\\\]{2}#/#g" > ${logFile}` ]);
+    await exec.exec('bash', [ '-c', `find ${path.posix.join(tempPath, 'clang-tidy', path.posix.sep)} -maxdepth 1 -name '*.log' -exec cat {} \\; | java -jar ${toolPath} | sed -r -e "s#[\\\\]{2}#/#g" > ${logFile}` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" -d @${logFile} "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/issuesRemoteResults"` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/resultsFinal"` ]);
     core.endGroup();
