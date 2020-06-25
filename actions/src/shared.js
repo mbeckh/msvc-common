@@ -10,7 +10,7 @@ const env = process.env;
 
 const MSBUILD_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\MSBuild\\Current\\Bin\\MSBuild.exe';
 const CL_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Tools\\MSVC\\*\\bin\\Hostx64\\x64\\cl.exe';
-const CLANGTIDY_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\Tools\\Llvm\\x64\\bin\\clang-tidy.exe';
+const CLANGTIDY_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Tools\\Llvm\\x64\\bin\\clang-tidy.exe';
 const OPENCPPCOVERAGE_VERSION = '0.9.9.0';
 const OPENCPPCOVERAGE_URL = `https://github.com/OpenCppCoverage/OpenCppCoverage/releases/download/release-${OPENCPPCOVERAGE_VERSION}/OpenCppCoverageSetup-x64-${OPENCPPCOVERAGE_VERSION}.exe`;
 const INNOEXTRACT_URL = 'https://github.com/dscharrer/innoextract/releases/download/1.8/innoextract-1.8-windows.zip';
