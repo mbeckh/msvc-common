@@ -213,7 +213,6 @@ exports.coverage = async function() {
 exports.analyzeClangTidy = async function() {
   try {
     const id = core.getInput('id', { 'required': true });
-    const exclude = core.getInput('exclude').split('\s*[\n]\s*').filter((e) => e != '').map((e) => `!${path.posix.normalize(e)}`);
     const clangArgs = core.getInput('clang-args');
 
     core.startGroup('Getting version of MSVC compiler');
@@ -230,7 +229,7 @@ exports.analyzeClangTidy = async function() {
     version = /([0-9]+)/.exec(version)[1];
     core.endGroup();
     
-    const sourceGlobber = await glob.create(exclude.concat([ '**/*.c', '**/*.cc', '**/*.cpp', '**/*.cxx', `!${tempPath}`, '!lib' ]).join('\n'));
+    const sourceGlobber = await glob.create([ '**/*.c', '**/*.cc', '**/*.cpp', '**/*.cxx', `!${tempPath}`, '!lib' ].join('\n'));
     const workspace = env.GITHUB_WORKSPACE;
 
     const cpus = os.cpus().length;

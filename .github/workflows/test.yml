@@ -54,7 +54,6 @@ jobs:
       uses: ./actions/analyze-clang-tidy
       with:
         id: default
-        exclude: Detours
   
     - name: Run 'analyze-report' action
       uses: ./actions/analyze-report
