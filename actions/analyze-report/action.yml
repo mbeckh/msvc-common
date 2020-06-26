@@ -2,6 +2,9 @@ name: 'Report to Codacy Action'
 author: 'Michael Beckh'
 description: 'Report clang-tidy analysis results to Codacy'
 inputs:
+  github-token:
+    description: 'The Github token'
+    required: true
   codacy-token:
     description: 'The value of the codacy project token'
     required: true

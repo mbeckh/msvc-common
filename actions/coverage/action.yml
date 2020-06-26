@@ -16,6 +16,9 @@ inputs:
     description: 'The platform for which was built'
     required: false
     default: 'x64'
+  github-token:
+    description: 'The Github token'
+    required: true
   codacy-token:
     description: 'The value of the codacy project token'
     required: true

@@ -1,3 +1,4 @@
+'use strict';
 const core = require('@actions/core');
 const exec = require('@actions/exec');
 const cache = require('@actions/cache');
@@ -47,8 +48,11 @@ async function setupOpenCppCoverage() {
   core.startGroup('Installing OpenCppCoverage');
   // Install "by hand" because running choco on github is incredibly slow
   core.info('Getting latest release for OpenCppCoverage');
-  core.setSecret(env.GITHUB_TOKEN);
-  const octokit = github.getOctokit(env.GITHUB_TOKEN);
+
+  const githubToken = core.getInput('github-token', { 'required': true });
+  core.setSecret(githubToken);
+
+  const octokit = github.getOctokit(githubToken);
   const release = await octokit.repos.getLatestRelease({ 'owner':'OpenCppCoverage', 'repo': 'OpenCppCoverage' });
   const asset = release.assets.filter((e) => /-x64-.*\.exe$/.matches(e.name));
   const key = `opencppcoverage-${asset.id}`;
@@ -88,7 +92,10 @@ async function setupCodacyClangTidy() {
 
   core.startGroup('Installing codacy-clang-tidy');
   core.info('Getting latest release for innoextract');
-  core.setSecret(env.GITHUB_TOKEN);
+
+  const githubToken = core.getInput('github-token', { 'required': true });
+  core.setSecret(githubToken);
+
   const octokit = github.getOctokit(env.GITHUB_TOKEN);
   const release = await octokit.repos.getLatestRelease({ 'owner':'codacy', 'repo': 'codacy-clang-tidy' });
   const asset = release.assets.filter((e) => /\.jar$/.matches(e.name));
