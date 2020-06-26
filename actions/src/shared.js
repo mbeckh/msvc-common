@@ -215,7 +215,7 @@ exports.coverage = async function() {
 
     core.startGroup('Sending coverage to codacy');
     await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(path.posix.forceNormalize(solutionPath), 'bin', '*_coverage.xml')}' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
-    await exec.exec('bash', [ '-c', `cat ${path.posix.join(path.posix.forceNormalize(solutionPath), 'bin', '*_coverage.xml')} | sed -E "s#>D:<#>.<#g; s#D:\\\\\\\\a\\\\\\\\llamalog\\\\\\\\llamalog\\\\\\\\##g; s#a\\\\\\\\llamalog\\\\\\\\llamalog\\\\\\\\##g; s#\\\\\\\\#/#g" > bin/cov.xml` ]);
+    await exec.exec('bash', [ '-c', `cat ${path.posix.join(path.posix.forceNormalize(solutionPath), 'bin', '*_coverage.xml')} | sed -E -e "s#>D:<#>.<#g" -e "s#D:\\\\\\\\a\\\\\\\\llamalog\\\\\\\\llamalog\\\\\\\\##g" -e "s#a\\\\\\\\llamalog\\\\\\\\llamalog\\\\\\\\##g" -e "s#\\\\\\\\#/#g" > bin/cov.xml` ]);
 
     if (!codacyCoverageCacheId) {
       await saveCache([ '.codacy-coverage' ], codacyCacheKey);
