@@ -234,8 +234,8 @@ function getExclusions() {
       Array.prototype.push.apply(exclusions, codacyData.exclude_paths);
     }
     // be prepared for future enhancement...
-    if (codacyData.engines && codacyData.engines['clang-tidy']) {
-      Array.prototype.push.apply(exclusions, codacyData.engines['clang-tidy']);
+    if (codacyData.engines && codacyData.engines['clang-tidy'] && codacyData.engines['clang-tidy'].exclude_paths) {
+      Array.prototype.push.apply(exclusions, codacyData.engines['clang-tidy'].exclude_paths);
     }
     if (exclusions.length > 3) {
       core.info(`Using ${exclusions.length - 3} exclusions from .codacy.yml: ${exclusions.slice(3).join(` ${path.delimiter} `)}`);
@@ -281,8 +281,8 @@ exports.analyzeClangTidy = async function() {
           .finally(() => fs.closeSync(output)));
       processes.push(promise);
     }
+    await Promise.all(processes);
     core.endGroup();
-    return Promise.all(processes);
   } catch (error) {
     core.setFailed(error.message);
   }
