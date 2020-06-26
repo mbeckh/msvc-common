@@ -7,6 +7,6 @@ engines:
       - '**/test/**'
   clang-tidy:
     exclude_paths:
-      - '**/test/**'
+      - '**/test/test/**'
 exclude_paths:
   - '**/dist/**'
