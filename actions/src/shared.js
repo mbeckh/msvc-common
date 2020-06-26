@@ -47,7 +47,8 @@ async function setupOpenCppCoverage() {
   core.startGroup('Installing OpenCppCoverage');
   // Install "by hand" because running choco on github is incredibly slow
   core.info('Getting latest release for OpenCppCoverage');
-  const octokit = github.getOctokit();
+  core.setSecret(env.GITHUB_TOKEN);
+  const octokit = github.getOctokit(env.GITHUB_TOKEN);
   const release = await octokit.repos.getLatestRelease({ 'owner':'OpenCppCoverage', 'repo': 'OpenCppCoverage' });
   const asset = release.assets.filter((e) => /-x64-.*\.exe$/.matches(e.name));
   const key = `opencppcoverage-${asset.id}`;
@@ -87,7 +88,8 @@ async function setupCodacyClangTidy() {
 
   core.startGroup('Installing codacy-clang-tidy');
   core.info('Getting latest release for innoextract');
-  const octokit = github.getOctokit();
+  core.setSecret(env.GITHUB_TOKEN);
+  const octokit = github.getOctokit(env.GITHUB_TOKEN);
   const release = await octokit.repos.getLatestRelease({ 'owner':'codacy', 'repo': 'codacy-clang-tidy' });
   const asset = release.assets.filter((e) => /\.jar$/.matches(e.name));
   const key = `codacy-clang-tidy-${asset.id}`;
