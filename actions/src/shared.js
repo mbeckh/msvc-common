@@ -9,6 +9,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const os = require('os');
 const path = require('path');
+const yaml = require('js-yaml');
 
 const env = process.env;
 const tempPath = '.mbeckh';
@@ -224,6 +225,25 @@ exports.coverage = async function() {
   }
 };
 
+function getExclusions() {
+  let exclusions = [ `!${tempPath}`, '!lib', '!msvc-common' ];
+  if (fs.accessSync('.codacy.yml', fs.constants.R_OK)) {
+    const codacyFile = fs.readFileSync('.codacy.yml');
+    const codacyData = yaml.safeLoad(codacyFile);
+    if (codacyData.exclude_paths) {
+      Array.prototype.push.apply(exclusions, codacyData.exclude_paths);
+    }
+    // be prepared for future enhancement...
+    if (codacyData.engines && codacyData.engines['clang-tidy']) {
+      Array.prototype.push.apply(exclusions, codacyData.engines['clang-tidy']);
+    }
+    if (exclusions.length > 3) {
+      core.info(`Using ${exclusions.length - 3} exclusions from .codacy.yml: ${exclusions.slice(3).join(` ${path.delimiter} `)}`);
+    }
+  }
+  return exclusions;
+}
+
 exports.analyzeClangTidy = async function() {
   try {
     const id = core.getInput('id', { 'required': true });
@@ -243,7 +263,7 @@ exports.analyzeClangTidy = async function() {
     version = /([0-9]+)/.exec(version)[1];
     core.endGroup();
     
-    const sourceGlobber = await glob.create([ '**/*.c', '**/*.cc', '**/*.cpp', '**/*.cxx', `!${tempPath}`, '!lib', '!msvc-common' ].join('\n'));
+    const sourceGlobber = await glob.create([ '**/*.c', '**/*.cc', '**/*.cpp', '**/*.cxx' ].concat(getExclusions()).join('\n'));
     const workspace = env.GITHUB_WORKSPACE;
 
     const cpus = os.cpus().length;
@@ -253,7 +273,7 @@ exports.analyzeClangTidy = async function() {
     let index = 0;
     for await (const file of sourceGlobber.globGenerator()) {
       const logFile = `${path.basename(file).replace('.', '_')}-${id}-${index++}.log`;
-      const args = `--system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs}`;
+      const args = `--system-header-prefix=lib/ -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs}`;
       const output = fs.openSync(path.join(logPath, logFile), 'ax'); 
       const promise = throat(
         () => exec.exec(`"${CLANGTIDY_PATH}" --header-filter="^(?!lib/.*$).*" ${path.relative(workspace, file)} -- ${args}`,
