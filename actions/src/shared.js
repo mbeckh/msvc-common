@@ -82,9 +82,10 @@ async function setupOpenCppCoverage() {
     await saveCache([ toolPath ], key);
     core.info(`Installed ${release.name} at ${toolPath}`);
   }
-  core.addPath(path.resolve(toolPath, 'app'));
   core.endGroup();
-  return appPath;
+  const binPath = path.resolve(toolPath, 'app');
+  core.addPath(binPath);
+  return path.join(binPath, 'OpenCppCoverage.exe');
 }
 
 async function setupCodacyClangTidy() {

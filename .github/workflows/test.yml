@@ -7,24 +7,8 @@ on:
     branches: [ master ]
 
 jobs:
-  download:
-    name: Download
-    runs-on: windows-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Run 'coverage' action
-      uses: ./actions/coverage
-      with:
-        solution-path: actions/test
-        projects: main_Test
-        configuration: ${{ matrix.configuration }}
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
-
   test:
     name: Testing
-    if: 0 == 1
     runs-on: windows-latest
     strategy:
       matrix:
@@ -62,7 +46,6 @@ jobs:
   analyze:
     name: Analyzing
     runs-on: windows-latest
-    if: 0 == 1
 
     steps:
     - name: Checkout
