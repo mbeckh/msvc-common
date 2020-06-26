@@ -239,11 +239,11 @@ exports.analyzeClangTidy = async function() {
     const versionFilePath = path.join(tempPath, 'msc-version.cpp');
     fs.writeFileSync(versionFilePath, '_MSC_VER');
     let version = '';
-    await exec.exec(`"${cl[0]}"`, [ '/EP', versionFilePath ], { 'listeners': { 'stdout': (data) => { version += data.toString(); }}});
+    await exec.exec(`"${cl[0]}"`, [ '/EP', versionFilePath ], { 'listeners': { 'stdout': (data) => version += data.toString() }});
     version = /([0-9]+)/.exec(version)[1];
     core.endGroup();
     
-    const sourceGlobber = await glob.create([ '**/*.c', '**/*.cc', '**/*.cpp', '**/*.cxx', `!${tempPath}`, '!lib' ].join('\n'));
+    const sourceGlobber = await glob.create([ '**/*.c', '**/*.cc', '**/*.cpp', '**/*.cxx', `!${tempPath}`, '!lib', '!msvc-common' ].join('\n'));
     const workspace = env.GITHUB_WORKSPACE;
 
     const cpus = os.cpus().length;
@@ -253,7 +253,11 @@ exports.analyzeClangTidy = async function() {
     let index = 0;
     for await (const file of sourceGlobber.globGenerator()) {
       const logFile = `${path.basename(file).replace('.', '_')}-${id}-${index++}.log`;
-      const promise = throat(() => exec.exec(`"${CLANGTIDY_PATH}" "--header-filter=.*" ${path.relative(workspace, file)} -- --system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs} > ${path.join(logPath, logFile)}`, [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true }));
+      const args = `--system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs}`;
+      const output = fs.createWriteStream(path.join(logPath, logFile)); 
+      const promise = throat(
+        () => exec.exec(`"${CLANGTIDY_PATH}" --header-filter="^(?!lib/.*$).*" ${path.relative(workspace, file)} -- ${args}`,
+          [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true, 'stdout': output }));
       processes.push(promise);
     }
     core.endGroup();
