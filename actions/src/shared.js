@@ -18,11 +18,11 @@ const CL_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterpr
 const CLANGTIDY_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Tools\\Llvm\\x64\\bin\\clang-tidy.exe';
 
 // Normalize functions do not change separators, so add additional version
-path.posix.forceNormalize = function(path) {
-  return path.posix.normalize(path).replace(/\\/g, '/');
+path.posix.forceNormalize = function(filePath) {
+  return path.posix.normalize(filePath).replace(/\\/g, '/');
 };
-path.win32.forceNormalize = function(path) {
-  return path.win32.normalize(path).replace(/\//g, '\\');
+path.win32.forceNormalize = function(filePath) {
+  return path.win32.normalize(filePath).replace(/\//g, '\\');
 };
 path.forceNormalize = path.sep === '/' ? path.posix.forceNormalize : path.win32.forceNormalize;
 
