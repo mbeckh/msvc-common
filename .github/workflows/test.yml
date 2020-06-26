@@ -7,8 +7,23 @@ on:
     branches: [ master ]
 
 jobs:
+  download:
+    name: Download
+    runs-on: windows-latest
+    steps:
+    - name: Run 'coverage' action
+      if: matrix.configuration == 'Debug'
+      uses: ./actions/coverage
+      with:
+        solution-path: actions/test
+        projects: main_Test
+        configuration: ${{ matrix.configuration }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
+
   test:
     name: Testing
+    if: 0 == 1
     runs-on: windows-latest
     strategy:
       matrix:
