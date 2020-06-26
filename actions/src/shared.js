@@ -17,9 +17,18 @@ const MSBUILD_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\En
 const CL_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Tools\\MSVC\\*\\bin\\Hostx64\\x64\\cl.exe';
 const CLANGTIDY_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Tools\\Llvm\\x64\\bin\\clang-tidy.exe';
 
+// Normalize functions do not change separators, so add additional version
+path.posix.forceNormalize = function(path) {
+  return path.posix.normalize(path).replace(/\\/g, '/');
+};
+path.win32.forceNormalize = function(path) {
+  return path.win32.normalize(path).replace(/\//g, '\\');
+};
+path.forceNormalize = path.sep === '/' ? path.posix.forceNormalize : path.win32.forceNormalize;
+
 async function saveCache(paths, key) {
   try {
-    return await cache.saveCache(paths.map((e) => path.posix.normalize(e)), key);
+    return await cache.saveCache(paths.map((e) => path.posix.forceNormalize(e)), key);
   } catch (error) {
     // failures in caching should not abort the job
     core.warning(error.message);
@@ -29,7 +38,7 @@ async function saveCache(paths, key) {
 
 async function restoreCache(paths, key, altKeys) {
   try {
-    return await cache.restoreCache(paths.map((e) => path.posix.normalize(e)), key, altKeys);
+    return await cache.restoreCache(paths.map((e) => path.posix.forceNormalize(e)), key, altKeys);
   } catch (error) {
     // failures in caching should not abort the job
     core.warning(error.message);
@@ -115,8 +124,8 @@ function getRepositoryName() {
 }
 
 function getSolutionPath() {
-  const solutionPath = path.posix.normalize(core.getInput('solution-path')).replace(/\/+$/, ''); // remove trailing slashes
-  return path.normalize(solutionPath);
+  const solutionPath = path.posix.forceNormalize(core.getInput('solution-path')).replace(/\/+$/, ''); // remove trailing slashes
+  return path.forceNormalize(solutionPath);
 }
 
 function getProjects() {
@@ -203,7 +212,7 @@ exports.coverage = async function() {
     core.endGroup();
 
     core.startGroup('Sending coverage to codacy');
-    await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(path.posix.normalize(solutionPath), 'bin', '*_coverage.xml')}' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
+    await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(path.posix.forceNormalize(solutionPath), 'bin', '*_coverage.xml')}' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
 
     if (!codacyCoverageCacheId) {
       await saveCache([ '.codacy-coverage' ], codacyCacheKey);
@@ -263,7 +272,7 @@ exports.analyzeReport = async function() {
 
     core.startGroup('Sending code analysis to codacy');
     const logFile = path.posix.join(tempPath, 'clang-tidy.json');
-    await exec.exec('bash', [ '-c', `find ${path.posix.join(tempPath, 'clang-tidy', path.posix.sep)} -maxdepth 1 -name '*.log' -exec cat {} \\; | java -jar ${toolPath.replace(/\\/g, '/')} | sed -r -e "s#[\\\\]{2}#/#g" > ${logFile}` ]);
+    await exec.exec('bash', [ '-c', `find ${path.posix.join(tempPath, 'clang-tidy', path.posix.sep)} -maxdepth 1 -name '*.log' -exec cat {} \\; | java -jar ${path.posix.forceNormalize(toolPath)} | sed -r -e "s#[\\\\]{2}#/#g" > ${logFile}` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" -d @${logFile} "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/issuesRemoteResults"` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/resultsFinal"` ]);
     core.endGroup();
