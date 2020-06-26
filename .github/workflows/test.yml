@@ -12,7 +12,6 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Run 'coverage' action
-      if: matrix.configuration == 'Debug'
       uses: ./actions/coverage
       with:
         solution-path: actions/test
@@ -61,6 +60,7 @@ jobs:
   analyze:
     name: Analyzing
     runs-on: windows-latest
+    if: 0 == 1
 
     steps:
     - name: Checkout
