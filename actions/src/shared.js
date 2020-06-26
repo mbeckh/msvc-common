@@ -254,10 +254,11 @@ exports.analyzeClangTidy = async function() {
     for await (const file of sourceGlobber.globGenerator()) {
       const logFile = `${path.basename(file).replace('.', '_')}-${id}-${index++}.log`;
       const args = `--system-header-prefix=lib/ -Iinclude -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs}`;
-      const output = fs.createWriteStream(path.join(logPath, logFile)); 
+      const output = fs.openSync(path.join(logPath, logFile), 'ax'); 
       const promise = throat(
         () => exec.exec(`"${CLANGTIDY_PATH}" --header-filter="^(?!lib/.*$).*" ${path.relative(workspace, file)} -- ${args}`,
-          [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true, 'outStream': output }));
+          [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true, 'listeners': { 'stdout': (data) => fs.appendFileSync(output, data) }})
+          .finally(() => fs.closeSync(output)));
       processes.push(promise);
     }
     core.endGroup();
