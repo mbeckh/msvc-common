@@ -257,7 +257,7 @@ exports.analyzeClangTidy = async function() {
       const output = fs.createWriteStream(path.join(logPath, logFile)); 
       const promise = throat(
         () => exec.exec(`"${CLANGTIDY_PATH}" --header-filter="^(?!lib/.*$).*" ${path.relative(workspace, file)} -- ${args}`,
-          [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true, 'stdout': output }));
+          [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true, 'outStream': output }));
       processes.push(promise);
     }
     core.endGroup();
