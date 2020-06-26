@@ -202,6 +202,7 @@ exports.coverage = async function() {
                        `--excluded_modules=${path.join(rootPath, 'lib', path.sep)}`,
                        `--sources=${rootPath}`,
                        `--excluded_sources=${path.join(rootPath, 'lib', path.sep)}`,
+                       `--excluded_sources=${path.join(rootPath, 'msvc-common', path.sep)}`,
                        `--excluded_sources=${path.join(rootPath, 'test', path.sep)}`,
                        `--export_type=cobertura:${project}_coverage.xml`,
                        '--', `${project}_${platform}${suffix}` ], { 'cwd': path.join(solutionPath, 'bin') });
@@ -213,6 +214,7 @@ exports.coverage = async function() {
     core.endGroup();
 
     core.startGroup('Sending coverage to codacy');
+    await exec.exec('bash', [ '-c', `cat ${path.posix.join(path.posix.forceNormalize(solutionPath), 'bin', '*_coverage.xml')} | sed -E "s#>D:<#>.<#g; s#D:\\\\a\\\\llamalog\\\\llamalog\\\\##g; s#a\\\\llamalog\\\\llamalog\\\##g; s#\\\\#/#g" > bin/cov.xml` ]);
     await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(path.posix.forceNormalize(solutionPath), 'bin', '*_coverage.xml')}' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
 
     if (!codacyCoverageCacheId) {
