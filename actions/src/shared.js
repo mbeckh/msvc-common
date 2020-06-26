@@ -238,7 +238,7 @@ function getExclusions() {
       Array.prototype.push.apply(exclusions, codacyData.engines['clang-tidy'].exclude_paths);
     }
     if (exclusions.length > 3) {
-      core.info(`Using ${exclusions.length - 3} exclusions from .codacy.yml: ${exclusions.slice(3).join(` ${path.delimiter} `)}`);
+      core.info(`Using ${exclusions.length - 3} exclusion${exclusions.length > 1 ? 's' : ''} from .codacy.yml: ${exclusions.slice(3).join(` ${path.delimiter} `)}`);
     }
   }
   return exclusions;
