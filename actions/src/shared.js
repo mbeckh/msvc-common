@@ -227,7 +227,7 @@ exports.coverage = async function() {
 
 function getExclusions() {
   let exclusions = [ `!${tempPath}`, '!lib', '!msvc-common' ];
-  if (fs.accessSync('.codacy.yml', fs.constants.R_OK)) {
+  if (fs.existsSync('.codacy.yml')) {
     const codacyFile = fs.readFileSync('.codacy.yml');
     const codacyData = yaml.safeLoad(codacyFile);
     if (codacyData.exclude_paths) {
