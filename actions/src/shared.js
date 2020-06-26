@@ -208,7 +208,7 @@ exports.coverage = async function() {
     core.endGroup();
 
     core.startGroup('Sending coverage to codacy');
-    await exec.exec('bash', [ '-c', `${path.posix.join('.', codacyScript)} report -r '${path.posix.join(solutionPath, 'bin', '*_coverage.xml')}' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
+    await exec.exec('bash', [ '-c', `${path.posix.join('./', codacyScript)} report -r '${path.posix.join(solutionPath, 'bin', '*_coverage.xml')}' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
 
     if (!codacyCoverageCacheId) {
       await saveCache([ '.codacy-coverage' ], codacyCacheKey);
@@ -268,7 +268,7 @@ exports.analyzeReport = async function() {
 
     core.startGroup('Sending code analysis to codacy');
     const logFile = path.posix.join(tempPath, 'clang-tidy.json');
-    await exec.exec('bash', [ '-c', `find ${path.posix.join(tempPath, 'clang-tidy', path.posix.sep)} -maxdepth 1 -name '*.log' -exec cat {} \\; | java -jar ${toolPath} | sed -r -e "s#[\\\\]{2}#/#g" > ${logFile}` ]);
+    await exec.exec('bash', [ '-c', `find ${path.posix.join(tempPath, 'clang-tidy', path.posix.sep)} -maxdepth 1 -name '*.log' -exec cat {} \\; | java -jar ${path.posix.normalize(toolPath)} | sed -r -e "s#[\\\\]{2}#/#g" > ${logFile}` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" -d @${logFile} "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/issuesRemoteResults"` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/resultsFinal"` ]);
     core.endGroup();
