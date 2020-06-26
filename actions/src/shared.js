@@ -226,7 +226,7 @@ exports.coverage = async function() {
 };
 
 function getExclusions() {
-  let exclusions = [ `!${tempPath}`, '!lib', '!msvc-common' ];
+  let exclusions = [ `${tempPath}`, 'lib', 'msvc-common' ];
   if (fs.existsSync('.codacy.yml')) {
     const codacyFile = fs.readFileSync('.codacy.yml');
     const codacyData = yaml.safeLoad(codacyFile);
@@ -241,7 +241,7 @@ function getExclusions() {
       core.info(`Using ${exclusions.length - 3} exclusion${exclusions.length > 1 ? 's' : ''} from .codacy.yml: ${exclusions.slice(3).join(` ${path.delimiter} `)}`);
     }
   }
-  return exclusions;
+  return exclusions.map((e) => `!${e}`);
 }
 
 exports.analyzeClangTidy = async function() {
@@ -276,7 +276,7 @@ exports.analyzeClangTidy = async function() {
       const args = `--system-header-prefix=lib/ -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs}`;
       const output = fs.openSync(path.join(logPath, logFile), 'ax'); 
       const promise = throat(
-        () => exec.exec(`"${CLANGTIDY_PATH}" --header-filter="^(?!lib/.*$).*" ${path.relative(workspace, file)} -- ${args}`,
+        () => exec.exec(`"${CLANGTIDY_PATH}" --header-filter="^(?!lib[/\\].*$).*" ${path.relative(workspace, file)} -- ${args}`,
           [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true, 'listeners': { 'stdout': (data) => fs.appendFileSync(output, data) }})
           .finally(() => fs.closeSync(output)));
       processes.push(promise);
