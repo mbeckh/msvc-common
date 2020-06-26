@@ -56,14 +56,14 @@ jobs:
       with:
         id: default
 
-    - name: Run 'analyze-report' action
-      uses: ./actions/analyze-report
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
-
     - name: Save logs
       uses: actions/upload-artifact@v2
       with:
         name: clang-tidy
         path: .mbeckh/clang-tidy
+
+    - name: Run 'analyze-report' action
+      uses: ./actions/analyze-report
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
