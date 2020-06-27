@@ -11,7 +11,9 @@ const path = require('path');
 const yaml = require('js-yaml');
 
 const env = process.env;
-const tempPath = '.mbeckh';
+const TEMP_PATH = '.mbeckh';
+const OUTPUT_PATH = 'output';
+const COVERAGE_PATH = 'coverage';
 
 const MSBUILD_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\MSBuild\\Current\\Bin\\MSBuild.exe';
 const CL_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Tools\\MSVC\\*\\bin\\Hostx64\\x64\\cl.exe';
@@ -47,7 +49,7 @@ async function restoreCache(paths, key, altKeys) {
 }
 
 async function setupOpenCppCoverage() {
-  const toolPath = path.join(tempPath, 'OpenCppCoverage');
+  const toolPath = path.join(TEMP_PATH, 'OpenCppCoverage');
   
   core.startGroup('Installing OpenCppCoverage');
   // Install "by hand" because running choco on github is incredibly slow
@@ -70,18 +72,18 @@ async function setupOpenCppCoverage() {
       const asset = release.assets.filter((e) => /-windows\.zip$/.test(e.name))[0];
       core.info(`Downloading ${release.name} from ${asset.browser_download_url}`);
       
-      const downloadPath = path.join(tempPath, asset.name);
+      const downloadPath = path.join(TEMP_PATH, asset.name);
       await exec.exec('curl', [ '-s', '-S', '-L', `-o${downloadPath}`, '--create-dirs', asset.browser_download_url ]);
       core.info('Unpacking innoextract');
-      await exec.exec('7z', [ 'x', '-aos', `-o${tempPath}`, downloadPath, 'innoextract.exe' ]);
+      await exec.exec('7z', [ 'x', '-aos', `-o${TEMP_PATH}`, downloadPath, 'innoextract.exe' ]);
     }
 
     core.info(`Downloading ${release.name} from ${asset.browser_download_url}`);
 
-    const downloadPath = path.join(tempPath, asset.name);
+    const downloadPath = path.join(TEMP_PATH, asset.name);
     await exec.exec('curl', [ '-s', '-S', '-L', `-o${downloadPath}`, '--create-dirs', asset.browser_download_url ]);
     core.info('Unpacking OpenCppCoverage');
-    await exec.exec(path.join(tempPath, 'innoextract'), [ '-e', '-m', '--output-dir', toolPath, downloadPath ]);
+    await exec.exec(path.join(TEMP_PATH, 'innoextract'), [ '-e', '-m', '--output-dir', toolPath, downloadPath ]);
 
     await saveCache([ toolPath ], key);
     core.info(`Installed ${release.name} at ${toolPath}`);
@@ -93,7 +95,7 @@ async function setupOpenCppCoverage() {
 }
 
 async function setupCodacyClangTidy() {
-  const toolPath = path.join(tempPath, 'codacy-clang-tidy');
+  const toolPath = path.join(TEMP_PATH, 'codacy-clang-tidy');
 
   core.startGroup('Installing codacy-clang-tidy');
   core.info('Getting latest release for codacy-clang-tidy');
@@ -156,11 +158,14 @@ exports.run = async function() {
     const suffix = configuration === 'Debug' ? 'd' : '';
     const platform = core.getInput('platform');
 
+    const outputPath = path.join(TEMP_PATH, OUTPUT_PATH);
+    io.mkdirP(outputPath);
+    
     for (const project of projects) {
       core.startGroup(`Running ${project}`);
-      const output = fs.openSync(path.join(tempPath, `${project}_${platform}${suffix}.out`), 'ax');
+      const output = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.out`), 'ax');
       try {
-        const error = fs.openSync(path.join(tempPath, `${project}_${platform}${suffix}.err`), 'ax');
+        const error = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.err`), 'ax');
         try {
           await exec.exec(path.join(env.GITHUB_WORKSPACE, solutionPath, 'bin', `${project}_${platform}${suffix}`), [ ], {
             'cwd': path.join(solutionPath, 'bin'),
@@ -193,9 +198,9 @@ exports.coverage = async function() {
     core.setSecret(codacyToken);
 
     core.startGroup('Loading codacy coverage reporter');
-    const codacyScript = '.codacy-coverage.sh';
-    await exec.exec('curl', ['-s', '-S', '-L', `-o${codacyScript}`, 'https://coverage.codacy.com/get.sh' ]);
-    const file = fs.readFileSync(codacyScript);
+    const CODACY_SCRIPT = '.codacy-coverage.sh';
+    await exec.exec('curl', ['-s', '-S', '-L', `-o${CODACY_SCRIPT}`, 'https://coverage.codacy.com/get.sh' ]);
+    const file = fs.readFileSync(CODACY_SCRIPT);
     const hash = crypto.createHash('sha256');
     hash.update(file);
     const hex = hash.digest('hex');
@@ -207,13 +212,20 @@ exports.coverage = async function() {
     }
     core.endGroup();
       
+    const rootPath = path.join(env.GITHUB_WORKSPACE, solutionPath, path.sep);
+    const outputPath = path.join(TEMP_PATH, OUTPUT_PATH);
+    const coveragePath = path.join(TEMP_PATH, COVERAGE_PATH);
+    io.mkdirP(outputPath);
+    io.mkdirP(coveragePath);
+
     for (const project of projects) {
-      core.startGroup('Getting code coverage');
-      const rootPath = path.join(env.GITHUB_WORKSPACE, solutionPath, path.sep);
-      const output = fs.openSync(path.join(tempPath, `${project}_${platform}${suffix}.coverage.out`), 'ax');
+      core.startGroup(`Getting code coverage for ${project}`);
+      const output = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.coverage.out`), 'ax');
       try {
-        const error = fs.openSync(path.join(tempPath, `${project}_${platform}${suffix}.coverage.err`), 'ax');
+        const error = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.coverage.err`), 'ax');
         try {
+          const workPath = path.join(solutionPath, 'bin');
+          const coverageFile = path.join(path.relative(workPath, coveragePath), `${project}.xml`);
           await exec.exec('OpenCppCoverage',
                           [`--modules=${rootPath}`,
                            `--excluded_modules=${path.join(rootPath, 'lib', path.sep)}`,
@@ -221,9 +233,9 @@ exports.coverage = async function() {
                            `--excluded_sources=${path.join(rootPath, 'lib', path.sep)}`,
                            `--excluded_sources=${path.join(rootPath, 'msvc-common', path.sep)}`,
                            `--excluded_sources=${path.join(rootPath, 'test', path.sep)}`,
-                           `--export_type=cobertura:${project}_coverage.xml`,
+                           `--export_type=cobertura:${coverageFile}`,
                            '--', `${project}_${platform}${suffix}` ], {
-                             'cwd': path.join(solutionPath, 'bin'),
+                             'cwd': workPath,
                              'listeners': {
                                'stdout': (data) => fs.appendFileSync(output, data),
                                'stderr': (data) => fs.appendFileSync(error, data) }});
@@ -237,13 +249,13 @@ exports.coverage = async function() {
     }
 
     core.startGroup('Sending coverage to codecov');
-    await exec.exec('bash', [ '-c', `bash <(curl -sS https://codecov.io/bash) -Z -f '${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')}'` ]);
+    await exec.exec('bash', [ '-c', `bash <(curl -sS https://codecov.io/bash) -Z -f '${path.posix.join(forcePosix(coveragePath), '*.xml')}'` ]);
     core.endGroup();
 
     core.startGroup('Sending coverage to codacy');
     //await exec.exec('bash', [ '-c', `cat ${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')} | sed -r -e "s#>D:<#>llamalog<#g" -e "s#D:[\\\\]a[\\\\]llamalog[\\\\]##g" -e "s#a[\\\\]llamalog[\\\\]##g" -e "s#[\\\\]#/#g" > bin/cov.xml` ]);
     //await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')}' -l CPP -f 1 -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
-    await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')}' -l CPP -f 1 -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
+    await exec.exec('bash', [ '-c', `./${CODACY_SCRIPT} report -r '${path.posix.join(forcePosix(coveragePath), '*.xml')}' -l CPP -f 1 -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
 
     if (!codacyCoverageCacheId) {
       await saveCache([ '.codacy-coverage' ], codacyCacheKey);
@@ -267,7 +279,7 @@ async function getMsvcVersion() {
   const globber = await glob.create(CL_PATH);
   const cl = await globber.glob();
 
-  const filePath = path.join(tempPath, 'msc-version.cpp');
+  const filePath = path.join(TEMP_PATH, 'msc-version.cpp');
   fs.writeFileSync(filePath, '_MSC_VER');
   let version = '';
   await exec.exec(`"${cl[0]}"`, [ '/EP', filePath ], { 'listeners': { 'stdout': (data) => version += data.toString() }});
@@ -275,7 +287,7 @@ async function getMsvcVersion() {
 }
 
 function getExclusions() {
-  let exclusions = [ `${tempPath}`, 'lib', 'msvc-common' ];
+  let exclusions = [ `${TEMP_PATH}`, 'lib', 'msvc-common' ];
   if (fs.existsSync('.codacy.yml')) {
     const codacyFile = fs.readFileSync('.codacy.yml');
     const codacyData = yaml.safeLoad(codacyFile);
@@ -299,7 +311,7 @@ exports.analyzeClangTidy = async function() {
     const clangArgs = core.getInput('clang-args');
 
     // make temp path for getMsvcVersion and clang-tidy logs
-    await io.mkdirP(tempPath);
+    await io.mkdirP(TEMP_PATH);
 
     core.startGroup('Getting version of MSVC compiler');
     const version = await getMsvcVersion();
@@ -311,7 +323,7 @@ exports.analyzeClangTidy = async function() {
     const files = (await globber.glob()).map((e) => path.relative(workspace, e));
 
     const args = `--system-header-prefix=lib/ -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs}`;
-    const output = fs.openSync(path.join(tempPath, `clang-tidy-${id}.log`), 'ax');
+    const output = fs.openSync(path.join(TEMP_PATH, `clang-tidy-${id}.log`), 'ax');
     try {
       await exec.exec(`"${CLANGTIDY_PATH}" --header-filter="^(?!lib[/\\].*$).*" ${files.join(' ')} -- ${args}`,
         [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true, 'listeners': { 'stdout': (data) => fs.appendFileSync(output, data) }});
@@ -332,8 +344,8 @@ exports.analyzeReport = async function() {
     core.setSecret(codacyToken);
 
     core.startGroup('Sending code analysis to codacy');
-    const logFile = path.posix.join(tempPath, 'clang-tidy.json');
-    await exec.exec('bash', [ '-c', `find ${tempPath} -maxdepth 1 -name 'clang-tidy-*.log' -exec cat {} \\; | java -jar ${forcePosix(toolPath)} | sed -r -e "s#[\\\\]{2}#/#g" > ${logFile}` ]);
+    const logFile = path.posix.join(TEMP_PATH, 'clang-tidy.json');
+    await exec.exec('bash', [ '-c', `find ${TEMP_PATH} -maxdepth 1 -name 'clang-tidy-*.log' -exec cat {} \\; | java -jar ${forcePosix(toolPath)} | sed -r -e "s#[\\\\]{2}#/#g" > ${logFile}` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" -d @${logFile} "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/issuesRemoteResults"` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/resultsFinal"` ]);
     core.endGroup();

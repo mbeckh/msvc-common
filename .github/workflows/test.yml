@@ -43,12 +43,18 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
 
+    - name: Save output
+      uses: actions/upload-artifact@v2
+      with:
+        name: output
+        path: .mbeckh/output
+
     - name: Save coverage
       if: matrix.configuration == 'Debug'
       uses: actions/upload-artifact@v2
       with:
         name: coverage
-        path: actions/test/bin/*_coverage.xml
+        path: .mbeckh/coverage
 
   analyze:
     name: Analyzing
