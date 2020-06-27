@@ -129,7 +129,7 @@ function getRepositoryName() {
 }
 
 function getSolutionPath() {
-  const solutionPath = forcePosix(core.getInput('solution-path')).replace(/\/+$/, ''); // remove trailing slashes
+  const solutionPath = core.getInput('solution-path').replace(/[\\\/]+$/, ''); // remove trailing (back-)slashes
   return forceNative(solutionPath);
 }
 
@@ -255,11 +255,10 @@ exports.coverage = async function() {
       // beautify file
       let data = fs.readFileSync(coverageFile, 'utf8');
       const root = /(?<=<source>).+?(?=<\/source>)/.exec(data)[0];
-      core.info(root);
-      core.info(env.GITHUB_WORKSPACE);
+      const workspaceWithoutRoot = env.GITHUB_WORKSPACE.substring(root.length).replace(/^[\\\/]/, ''); // remove leading (back-) slashes
       data = data.replace(/(?<=<source>).+?(?=<\/source>)/, repositoryName);
       data = data.replace(new RegExp(`(?<= name=")${escapeRegExp(env.GITHUB_WORKSPACE)}`), repositoryName);  // only one occurrence
-      data = data.replace(new RegExp(`(?<= filename=")${escapeRegExp(env.GITHUB_WORKSPACE.substring(root.length))}`, 'g'), repositoryName);
+      data = data.replace(new RegExp(`(?<= filename=")${escapeRegExp(workspaceWithoutRoot)}`, 'g'), repositoryName);
       data = data.replace(/\\/g, '/');
       fs.writeFileSync(coverageFile, data);
 
