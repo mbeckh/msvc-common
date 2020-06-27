@@ -7,7 +7,6 @@ const glob = require('@actions/glob');
 const io = require('@actions/io');
 const fs = require('fs');
 const crypto = require('crypto');
-const os = require('os');
 const path = require('path');
 const yaml = require('js-yaml');
 
@@ -19,17 +18,17 @@ const CL_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterpr
 const CLANGTIDY_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Tools\\Llvm\\x64\\bin\\clang-tidy.exe';
 
 // Normalize functions do not change separators, so add additional version
-path.posix.forceNormalize = function(filePath) {
+function forcePosix(filePath) {
   return path.posix.normalize(filePath).replace(/\\/g, '/');
-};
-path.win32.forceNormalize = function(filePath) {
+}
+function forceWin32(filePath) {
   return path.win32.normalize(filePath).replace(/\//g, '\\');
-};
-path.forceNormalize = path.sep === '/' ? path.posix.forceNormalize : path.win32.forceNormalize;
+}
+const forceNative = path.sep === '/' ? forcePosix : forceWin32;
 
 async function saveCache(paths, key) {
   try {
-    return await cache.saveCache(paths.map((e) => path.posix.forceNormalize(e)), key);
+    return await cache.saveCache(paths.map((e) => forcePosix(e)), key);
   } catch (error) {
     // failures in caching should not abort the job
     core.warning(error.message);
@@ -39,7 +38,7 @@ async function saveCache(paths, key) {
 
 async function restoreCache(paths, key, altKeys) {
   try {
-    return await cache.restoreCache(paths.map((e) => path.posix.forceNormalize(e)), key, altKeys);
+    return await cache.restoreCache(paths.map((e) => forcePosix(e)), key, altKeys);
   } catch (error) {
     // failures in caching should not abort the job
     core.warning(error.message);
@@ -125,8 +124,8 @@ function getRepositoryName() {
 }
 
 function getSolutionPath() {
-  const solutionPath = path.posix.forceNormalize(core.getInput('solution-path')).replace(/\/+$/, ''); // remove trailing slashes
-  return path.forceNormalize(solutionPath);
+  const solutionPath = forcePosix(core.getInput('solution-path')).replace(/\/+$/, ''); // remove trailing slashes
+  return forceNative(solutionPath);
 }
 
 function getProjects() {
@@ -210,22 +209,42 @@ exports.coverage = async function() {
     }
 
     core.startGroup('Sending coverage to codecov');
-    await exec.exec('bash', [ '-c', `bash <(curl -sS https://codecov.io/bash) -Z -f '${path.posix.join(solutionPath, 'bin', '*_coverage.xml')}'` ]);
+    await exec.exec('bash', [ '-c', `bash <(curl -sS https://codecov.io/bash) -Z -f '${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')}'` ]);
     core.endGroup();
 
     core.startGroup('Sending coverage to codacy');
-    await exec.exec('bash', [ '-c', `cat ${path.posix.join(path.posix.forceNormalize(solutionPath), 'bin', '*_coverage.xml')} | sed -r -e "s#>D:<#>llamalog<#g" -e "s#D:[\\\\]a[\\\\]llamalog[\\\\]##g" -e "s#a[\\\\]llamalog[\\\\]##g" -e "s#[\\\\]#/#g" > bin/cov.xml` ]);
-    await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(path.posix.forceNormalize(solutionPath), 'bin', 'cov.xml')}' -l CPP -f 1 -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
+    await exec.exec('bash', [ '-c', `cat ${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')} | sed -r -e "s#>D:<#>llamalog<#g" -e "s#D:[\\\\]a[\\\\]llamalog[\\\\]##g" -e "s#a[\\\\]llamalog[\\\\]##g" -e "s#[\\\\]#/#g" > bin/cov.xml` ]);
+    //await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')}' -l CPP -f 1 -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
+    await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')}' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
 
     if (!codacyCoverageCacheId) {
       await saveCache([ '.codacy-coverage' ], codacyCacheKey);
       core.info('Added .codacy-coverage to cache');
     }
     core.endGroup();
-  } catch (error) {
+   try {
+    const glob = await glob.create('C:\\**\\clang-tidy.exe');
+    const ct = await glob.glob();
+    core.info(ct);
+   } catch (error) {
+     core.warning(error.message);
+   }
+
+    } catch (error) {
     core.setFailed(error.message);
   }
 };
+
+async function getMsvcVersion() {
+  const globber = await glob.create(CL_PATH);
+  const cl = await globber.glob();
+    
+  const filePath = path.join(tempPath, 'msc-version.cpp');
+  fs.writeFileSync(filePath, '_MSC_VER');
+  let version = '';
+  await exec.exec(`"${cl[0]}"`, [ '/EP', filePath ], { 'listeners': { 'stdout': (data) => version += data.toString() }});
+  return /([0-9]+)/.exec(version)[1];
+}
 
 function getExclusions() {
   let exclusions = [ `${tempPath}`, 'lib', 'msvc-common' ];
@@ -240,7 +259,7 @@ function getExclusions() {
       Array.prototype.push.apply(exclusions, codacyData.engines['clang-tidy'].exclude_paths);
     }
     if (exclusions.length > 3) {
-      core.info(`Using ${exclusions.length - 3} exclusion${exclusions.length > 1 ? 's' : ''} from .codacy.yml: ${exclusions.slice(3).join(` ${path.delimiter} `)}`);
+      core.info(`Using ${exclusions.length - 3} exclusion${exclusions.length > 1 ? 's' : ''} from .codacy.yml: ${exclusions.slice(3).join(', ')}`);
     }
   }
   return exclusions.map((e) => `!${e}`);
@@ -252,38 +271,18 @@ exports.analyzeClangTidy = async function() {
     const clangArgs = core.getInput('clang-args');
 
     core.startGroup('Getting version of MSVC compiler');
-    const clGlobber = await glob.create(CL_PATH);
-    const cl = await clGlobber.glob();
-    
-    const logPath = path.join(tempPath, 'clang-tidy');
-    fs.mkdirSync(logPath, { 'recursive': true });
-
-    const versionFilePath = path.join(tempPath, 'msc-version.cpp');
-    fs.writeFileSync(versionFilePath, '_MSC_VER');
-    let version = '';
-    await exec.exec(`"${cl[0]}"`, [ '/EP', versionFilePath ], { 'listeners': { 'stdout': (data) => version += data.toString() }});
-    version = /([0-9]+)/.exec(version)[1];
+    const version = await getMsvcVersion();
     core.endGroup();
     
-    const sourceGlobber = await glob.create([ '**/*.c', '**/*.cc', '**/*.cpp', '**/*.cxx' ].concat(getExclusions()).join('\n'));
+    core.startGroup('Running code analysis');
+    const globber = await glob.create([ '**/*.c', '**/*.cc', '**/*.cpp', '**/*.cxx' ].concat(getExclusions()).join('\n'));
     const workspace = env.GITHUB_WORKSPACE;
+    const files = (await globber.glob()).map((e) => path.relative(workspace, e));
 
-    const cpus = os.cpus().length;
-    core.startGroup(`Running code analysis with ${cpus} threads`);
-    const throat = require('throat')(cpus);
-    let processes = [ ];
-    let index = 0;
-    for await (const file of sourceGlobber.globGenerator()) {
-      const logFile = `${path.basename(file).replace('.', '_')}-${id}-${index++}.log`;
-      const args = `--system-header-prefix=lib/ -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs}`;
-      const output = fs.openSync(path.join(logPath, logFile), 'ax'); 
-      const promise = throat(
-        () => exec.exec(`"${CLANGTIDY_PATH}" --header-filter="^(?!lib[/\\].*$).*" ${path.relative(workspace, file)} -- ${args}`,
-          [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true, 'listeners': { 'stdout': (data) => fs.appendFileSync(output, data) }})
-          .finally(() => fs.closeSync(output)));
-      processes.push(promise);
-    }
-    await Promise.all(processes);
+    const output = fs.openSync(path.join(tempPath, `clang-tidy-${id}.log`), 'ax'); 
+    const args = `--system-header-prefix=lib/ -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs}`;
+    await exec.exec(`"${CLANGTIDY_PATH}" --header-filter="^(?!lib[/\\].*$).*" ${files.join(' ')} -- ${args}`,
+        [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true, 'listeners': { 'stdout': (data) => fs.appendFileSync(output, data) }});
     core.endGroup();
   } catch (error) {
     core.setFailed(error.message);
@@ -299,7 +298,7 @@ exports.analyzeReport = async function() {
 
     core.startGroup('Sending code analysis to codacy');
     const logFile = path.posix.join(tempPath, 'clang-tidy.json');
-    await exec.exec('bash', [ '-c', `find ${path.posix.join(tempPath, 'clang-tidy', path.posix.sep)} -maxdepth 1 -name '*.log' -exec cat {} \\; | java -jar ${path.posix.forceNormalize(toolPath)} | sed -r -e "s#[\\\\]{2}#/#g" > ${logFile}` ]);
+    await exec.exec('bash', [ '-c', `find ${tempPath} -maxdepth 1 -name 'clang-tidy-*.log' -exec cat {} \\; | java -jar ${forcePosix(toolPath)} | sed -r -e "s#[\\\\]{2}#/#g" > ${logFile}` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" -d @${logFile} "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/issuesRemoteResults"` ]);
     await exec.exec('bash', [ '-c', `curl -s -S -XPOST -L -H "project-token: ${codacyToken}" -H "Content-type: application/json" -w "\\n" "https://api.codacy.com/2.0/commit/${env.GITHUB_SHA}/resultsFinal"` ]);
     core.endGroup();
