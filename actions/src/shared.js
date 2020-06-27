@@ -255,7 +255,7 @@ exports.coverage = async function() {
     core.startGroup('Sending coverage to codacy');
     //await exec.exec('bash', [ '-c', `cat ${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')} | sed -r -e "s#>D:<#>llamalog<#g" -e "s#D:[\\\\]a[\\\\]llamalog[\\\\]##g" -e "s#a[\\\\]llamalog[\\\\]##g" -e "s#[\\\\]#/#g" > bin/cov.xml` ]);
     //await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')}' -l CPP -f 1 -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
-    await exec.exec('bash', [ '-c', `./${CODACY_SCRIPT} report -r '${path.posix.join(forcePosix(coveragePath), '*.xml')}' -l CPP -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
+    await exec.exec('bash', [ '-c', `./${CODACY_SCRIPT} report -r '${path.posix.join(forcePosix(coveragePath), '*.xml')}' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
 
     if (!codacyCoverageCacheId) {
       await saveCache([ '.codacy-coverage' ], codacyCacheKey);
