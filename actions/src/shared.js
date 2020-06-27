@@ -219,11 +219,11 @@ exports.coverage = async function() {
     fs.mkdirSync(coveragePath, { 'recursive': true });
 
     const repositoryName = getRepositoryName();
-    const coverageFile = path.join(coveragePath, `${project}_${platform}${suffix}.xml`);
     for (const project of projects) {
       core.startGroup(`Getting code coverage for ${project}`);
       
       const output = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.coverage.out`), 'ax');
+      const coverageFile = path.join(coveragePath, `${project}_${platform}${suffix}.xml`);
       try {
         const error = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.coverage.err`), 'ax');
         try {
