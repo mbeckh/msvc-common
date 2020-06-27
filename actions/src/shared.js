@@ -158,7 +158,21 @@ exports.run = async function() {
 
     for (const project of projects) {
       core.startGroup(`Running ${project}`);
-      await exec.exec(path.join(env.GITHUB_WORKSPACE, solutionPath, 'bin', `${project}_${platform}${suffix}`), [ ], { 'cwd': path.join(solutionPath, 'bin') });
+      const output = fs.openSync(path.join(tempPath, `${project}_${platform}${suffix}.out`), 'ax');
+      try {
+        const error = fs.openSync(path.join(tempPath, `${project}_${platform}${suffix}.err`), 'ax');
+        try {
+          await exec.exec(path.join(env.GITHUB_WORKSPACE, solutionPath, 'bin', `${project}_${platform}${suffix}`), [ ], {
+            'cwd': path.join(solutionPath, 'bin'),
+            'listeners': {
+              'stdout': (data) => fs.appendFileSync(output, data),
+              'stderr': (data) => fs.appendFileSync(error, data) }});
+        } finally {
+          fs.closeSync(error);
+        }
+      } finally {
+        fs.closeSync(output);
+      }
       core.endGroup();
     }
   } catch (error) {
@@ -196,15 +210,29 @@ exports.coverage = async function() {
     for (const project of projects) {
       core.startGroup('Getting code coverage');
       const rootPath = path.join(env.GITHUB_WORKSPACE, solutionPath, path.sep);
-      await exec.exec('OpenCppCoverage',
-                      [`--modules=${rootPath}`,
-                       `--excluded_modules=${path.join(rootPath, 'lib', path.sep)}`,
-                       `--sources=${rootPath}`,
-                       `--excluded_sources=${path.join(rootPath, 'lib', path.sep)}`,
-                       `--excluded_sources=${path.join(rootPath, 'msvc-common', path.sep)}`,
-                       `--excluded_sources=${path.join(rootPath, 'test', path.sep)}`,
-                       `--export_type=cobertura:${project}_coverage.xml`,
-                       '--', `${project}_${platform}${suffix}` ], { 'cwd': path.join(solutionPath, 'bin') });
+      const output = fs.openSync(path.join(tempPath, `${project}_${platform}${suffix}.coverage.out`), 'ax');
+      try {
+        const error = fs.openSync(path.join(tempPath, `${project}_${platform}${suffix}.coverage.err`), 'ax');
+        try {
+          await exec.exec('OpenCppCoverage',
+                          [`--modules=${rootPath}`,
+                           `--excluded_modules=${path.join(rootPath, 'lib', path.sep)}`,
+                           `--sources=${rootPath}`,
+                           `--excluded_sources=${path.join(rootPath, 'lib', path.sep)}`,
+                           `--excluded_sources=${path.join(rootPath, 'msvc-common', path.sep)}`,
+                           `--excluded_sources=${path.join(rootPath, 'test', path.sep)}`,
+                           `--export_type=cobertura:${project}_coverage.xml`,
+                           '--', `${project}_${platform}${suffix}` ], {
+                             'cwd': path.join(solutionPath, 'bin'),
+                             'listeners': {
+                               'stdout': (data) => fs.appendFileSync(output, data),
+                               'stderr': (data) => fs.appendFileSync(error, data) }});
+        } finally {
+          fs.closeSync(error);
+        }
+      } finally {
+        fs.closeSync(output);
+      }
       core.endGroup();
     }
 
@@ -215,7 +243,7 @@ exports.coverage = async function() {
     core.startGroup('Sending coverage to codacy');
     //await exec.exec('bash', [ '-c', `cat ${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')} | sed -r -e "s#>D:<#>llamalog<#g" -e "s#D:[\\\\]a[\\\\]llamalog[\\\\]##g" -e "s#a[\\\\]llamalog[\\\\]##g" -e "s#[\\\\]#/#g" > bin/cov.xml` ]);
     //await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')}' -l CPP -f 1 -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
-    await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')}' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
+    await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')}' -l CPP -f 1 -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
 
     if (!codacyCoverageCacheId) {
       await saveCache([ '.codacy-coverage' ], codacyCacheKey);
@@ -282,10 +310,14 @@ exports.analyzeClangTidy = async function() {
     const workspace = env.GITHUB_WORKSPACE;
     const files = (await globber.glob()).map((e) => path.relative(workspace, e));
 
-    const output = fs.openSync(path.join(tempPath, `clang-tidy-${id}.log`), 'ax'); 
     const args = `--system-header-prefix=lib/ -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs}`;
-    await exec.exec(`"${CLANGTIDY_PATH}" --header-filter="^(?!lib[/\\].*$).*" ${files.join(' ')} -- ${args}`,
+    const output = fs.openSync(path.join(tempPath, `clang-tidy-${id}.log`), 'ax');
+    try {
+      await exec.exec(`"${CLANGTIDY_PATH}" --header-filter="^(?!lib[/\\].*$).*" ${files.join(' ')} -- ${args}`,
         [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true, 'listeners': { 'stdout': (data) => fs.appendFileSync(output, data) }});
+    } finally {
+      fs.closeSync(output);
+    }
     core.endGroup();
   } catch (error) {
     core.setFailed(error.message);
