@@ -219,15 +219,15 @@ exports.coverage = async function() {
     fs.mkdirSync(coveragePath, { 'recursive': true });
 
     const repositoryName = getRepositoryName();
+    const coverageFile = path.join(coveragePath, `${project}_${platform}${suffix}.xml`);
     for (const project of projects) {
       core.startGroup(`Getting code coverage for ${project}`);
-      const workPath = path.join(solutionPath, 'bin');
-      const coverageFile = path.join(path.relative(workPath, coveragePath), `${project}_${platform}${suffix}.xml`);
       
       const output = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.coverage.out`), 'ax');
       try {
         const error = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.coverage.err`), 'ax');
         try {
+          const workPath = path.join(solutionPath, 'bin');
           await exec.exec('OpenCppCoverage',
                           [`--modules=${rootPath}`,
                            `--excluded_modules=${path.join(rootPath, 'lib', path.sep)}`,
@@ -235,7 +235,7 @@ exports.coverage = async function() {
                            `--excluded_sources=${path.join(rootPath, 'lib', path.sep)}`,
                            `--excluded_sources=${path.join(rootPath, 'msvc-common', path.sep)}`,
                            `--excluded_sources=${path.join(rootPath, 'test', path.sep)}`,
-                           `--export_type=cobertura:${coverageFile}`,
+                           `--export_type=cobertura:${path.relative(workPath, coverageFile)}`,
                            '--', `${project}_${platform}${suffix}` ], {
                              'cwd': workPath,
                              'listeners': {
