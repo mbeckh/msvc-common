@@ -20,10 +20,10 @@ const CLANGTIDY_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\
 
 // Normalize functions do not change separators, so add additional version
 function forcePosix(filePath) {
-  return path.posix.normalize(filePath).replace(/\\/g, '/');
+  return path.posix.normalize(filePath).replaceAll(path.win32.sep, path.posix.sep);
 }
 function forceWin32(filePath) {
-  return path.win32.normalize(filePath).replace(/\//g, '\\');
+  return path.win32.normalize(filePath).replaceAll(path.posix.sep, path.win32.sep);
 }
 const forceNative = path.sep === '/' ? forcePosix : forceWin32;
 
@@ -218,6 +218,7 @@ exports.coverage = async function() {
     fs.mkdirSync(outputPath, { 'recursive': true });
     fs.mkdirSync(coveragePath, { 'recursive': true });
 
+    const repositoryName = getRepositoryName();
     for (const project of projects) {
       core.startGroup(`Getting code coverage for ${project}`);
       const output = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.coverage.out`), 'ax');
@@ -225,7 +226,7 @@ exports.coverage = async function() {
         const error = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.coverage.err`), 'ax');
         try {
           const workPath = path.join(solutionPath, 'bin');
-          const coverageFile = path.join(path.relative(workPath, coveragePath), `${project}.xml`);
+          const coverageFile = path.join(path.relative(workPath, coveragePath), `${project}_${platform}${suffix}.xml`);
           await exec.exec('OpenCppCoverage',
                           [`--modules=${rootPath}`,
                            `--excluded_modules=${path.join(rootPath, 'lib', path.sep)}`,
@@ -245,6 +246,16 @@ exports.coverage = async function() {
       } finally {
         fs.closeSync(output);
       }
+      
+      // beautify file
+      let data = fs.readFileSync(coverageFile);
+      const root = /(?<=<source>).+?(?=<\/source>)/.exec(data)[0];
+      data = data.replace(/(?<=<source>).+?(?=<\/source>)/, repositoryName);
+      data = data.replace(`${env.GITHUB_WORKSPACE}${path.sep}`, repositoryName);
+      data = data.replaceAll(`${env.GITHUB_WORKSPACE.substring(root.length)}${path.sep}`, repositoryName);
+      data = data.replaceAll('\\', '/');
+      fs.writeFileSync(coverageFile, data);
+
       core.endGroup();
     }
 
@@ -254,8 +265,8 @@ exports.coverage = async function() {
 
     core.startGroup('Sending coverage to codacy');
     //await exec.exec('bash', [ '-c', `cat ${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')} | sed -r -e "s#>D:<#>llamalog<#g" -e "s#D:[\\\\]a[\\\\]llamalog[\\\\]##g" -e "s#a[\\\\]llamalog[\\\\]##g" -e "s#[\\\\]#/#g" > bin/cov.xml` ]);
-    //await exec.exec('bash', [ '-c', `./${codacyScript} report -r '${path.posix.join(forcePosix(solutionPath), 'bin', '*_coverage.xml')}' -l CPP -f 1 -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
-    await exec.exec('bash', [ '-c', `./${CODACY_SCRIPT} report -r '${path.posix.join(forcePosix(coveragePath), '*.xml')}' -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
+    // Codacy requires language argument, else coverage is not detected
+    await exec.exec('bash', [ '-c', `./${CODACY_SCRIPT} report -r '${path.posix.join(forcePosix(coveragePath), '*.xml')}' -l CPP -t ${codacyToken} --commit-uuid ${env.GITHUB_SHA}` ]);
 
     if (!codacyCoverageCacheId) {
       await saveCache([ '.codacy-coverage' ], codacyCacheKey);
