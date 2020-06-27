@@ -12,16 +12,16 @@ The project also contains some [Github actions](actions) for automating the buil
 ## Directory Layout
 The common settings are based on the following directory layout.
 
--   [`<solution>`](#root-folder)`/`
-    -   [`bin`](#build-artifacts)`/`
-    -   [`doc`](#documentation)`/`
-    -   [`include`](#public-include-files)`/`
-    -   [`lib`](#external-libraries)`/`
-    -   [`msvc`](#msvc-project-files)`/`
-    -   [`msvc-common`](#build-framework-this-project)`/`
-    -   [`obj`](#intermediate-output-files)`/`
-    -   [`src`](#source-files)`/`
-	-   [`test`](#tnit-tests)`/`
+-   [`<solution>`](#root-folder)
+    -   [`bin/`](#build-artifacts)
+    -   [`doc/`](#documentation)
+    -   [`include/`](#public-include-files)
+    -   [`lib/`](#external-libraries)
+    -   [`msvc/`](#msvc-project-files)
+    -   [`msvc-common/`](#build-framework-this-project)
+    -   [`obj/`](#intermediate-output-files)
+    -   [`src/`](#source-files)
+	-   [`test/`](#tnit-tests)
 
 ### Root Folder
 The root folder contains the main solution file `<solution>.sln`.
@@ -34,14 +34,14 @@ the file name. For example, a 32-bit debug build for the library project `foo` w
 64-bit release build of the same project would be named `foo_x64.lib`.
 
 ### Documentation
-Documentation and all files required to build it SHOULD be put into this directory.
+Documentation and all files required to build it SHOULD be put into the directory `doc/`.
 
 ### Public Include Files
-All includes which should be externally visible, i.e. consumed by users of a shared library, SHOULD be placed into this
-folder.
+All includes which should be externally visible, i.e. consumed by users of a shared library, SHOULD be placed into the
+folder `include/`.
 
 ### External Libraries
-This directory contains all external libraries, mainly in the form of git submodules.
+The directory `lib/` contains all external libraries, mainly in the form of git submodules.
 
 To ensure that all libraries which are part of a solution use the same build settings, all dependencies of all sub
 modules using this project scheme MUST also be placed into the root `lib/` folder.
@@ -66,7 +66,7 @@ If the submodule contains submodules referenced by the pattern described in this
 `fetchRecurseSubmodules = false`. You MAY also consider setting `update = rebase` and `branch = .`
 
 ### MSVC Project Files
-This folder contains all project files and settings for the project.
+The folder `msvc/` contains all project files and settings for the project.
 
 For libraries, you MAY place a file names `<name>`.props inside this directory to enable references by other projects.
 
@@ -83,7 +83,7 @@ You MAY also place the files `stdadx.h` and `stdafx.cpp` inside this folder. The
 both automatically.
 
 ### Build Framework (This Project)
-This folder `msvc-common` contains common configuration files and readily available projects form common third party
+This folder `msvc-common/` contains common configuration files and readily available projects form common third party
 libraries. In fact, it is this project mapped as a submodule.
 
 -   `BuildConfiguration.props`: Included in the project file a a property sheet. A file with the same name in
@@ -110,10 +110,10 @@ The file `detours_gmock.h` in `msvc-common/Detours/`contains some useful macros 
 googletest and googlemock. The file is made available in the system class path.
 
 ### Intermediate Output Files
-All intermediate build files are placed in this folder.
+All intermediate build files are placed in the folder `obj/`.
 
 ### Source Files
-This folder is home of all source files and internal includes.
+This folder `src/` is home of all source files and internal includes.
 
 ### Unit Tests
-This folder is home of all source files for automated tests.
+This folder `test/` is home of all source files for automated tests. It is typically excluded for most code analysis.

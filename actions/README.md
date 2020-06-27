@@ -1,7 +1,11 @@
 # Actions
+[![Release](https://img.shields.io/github/v/tag/mbeckh/msvc-common?label=Release&style=flat-square)](https://github.com/mbeckh/msvc-common/releases/)
+[![Tests](https://img.shields.io/github/workflow/status/mbeckh/msvc-common/test/master?label=Tests&logo=GitHub&style=flat-square)](https://github.com/mbeckh/msvc-common/actions)
+[![License](https://img.shields.io/github/license/mbeckh/msvc-common?label=License&style=flat-square)](https://github.com/mbeckh/msvc-common/blob/master/LICENSE)
+
 The actions allow running a full CI pipeline with build, test and code metrics for Visual Studio/MSBuild on Github.
-They depend on the framework set by the [msvc-common configuration](..).
-The [build workflow](../../llamalog/actions?query=workflow%3Abuild) of the [llamalog project](../../llamalog) is an
+They depend on the framework set by the [msvc-common configuration](https://github.com/mbeckh/msvc-common).
+The [build workflow](https://github.com/mbeckh/llamalog/actions?query=workflow%3Abuild) of the [llamalog project](https://github.com/mbeckh/llamalog) is an
 example of all actions working together.
 
 The actions provide workflow steps for:
@@ -37,9 +41,9 @@ Example:
 -   `platform` - The name of the platform for which to build (optional, defaults to `x64`).
 
 ## Run a build artifact
-Run a binary produced by a previous [build](#build). A copy of the data printed to `stdout` and `stderr` is saved in the
-files `.mbeckh/output/<project>_<platform><debug-suffix>.out` and `.mbeckh/output/<project>_<platform><debug-suffix>.out`
-respectively. `debug-suffix` is `d` for the configuration `Debug`, else empty.
+Run a binary produced by a previous [build](#build). A copy of the data printed to `stdout` and `stderr` is saved to
+files `<project>_<platform><debug-suffix>.out` and `<project>_<platform><debug-suffix>.out` respectively.
+`<debug-suffix>` is `d` for configuration `Debug`, else empty. Both files are stored in the folder `.mbeckh/output/`.
 
 Example:
 ~~~yml
@@ -67,10 +71,13 @@ Example:
 -   `platform` - The name of the platform (optional, defaults to `x64`).
 
 ## Get code coverage
-Run a coverage analysis on a binary produced by a previous [build](#build). A copy of the data printed to `stdout` and
-`stderr` is saved in the files `.mbeckh/output/<project>_<platform><debug-suffix>.coverage.out` and
-`.mbeckh/output/<project>_<platform><debug-suffix>.coverage.out` respectively. `debug-suffix` is `d` for the 
-configuration `Debug`, else empty. The coverage report is saved in `.mbeckh/coverage`.
+Run a coverage analysis on a binary produced by a previous [build](#build-software). A copy of the data printed to `stdout` and
+`stderr` is saved to files `<project>_<platform><debug-suffix>.out` and `<project>_<platform><debug-suffix>.out`
+respectively. `<debug-suffix>` is `d` for configuration `Debug`, else empty. Both files are stored in the folder
+`.mbeckh/output/`.The coverage report is saved in `.mbeckh/coverage`.
+
+For the time being, all coverage reports are sent for the language `CPP` because else Codacy either ignores headers or
+source files. If required, an enhancement can be made to allow configuration for language argument.
 
 The latest version of [OpenCppCoverage](https://github.com/OpenCppCoverage/OpenCppCoverage) is automatically downloaded
 from Github. For unpacking the installer, the action uses the latest version of
@@ -118,6 +125,11 @@ Example:
 Run a clang-tidy analysis on the sources of one or multiple projects. The analysis can run in parallel for
 multiple configurations or platforms. Results are stored in the file `.mbeckh/clang-tidy-<id>.log`.
 To send the aggregated results to Codacy, please use the action [`analyze-report`](#report-code-quality).
+
+Analysis is performed for files with the extensions `.c`, `.cc`, `.cpp` and `.cxx`. Code in the folders `lib/`,
+`msvc-common` and `test/` is excluded from analysis by default. The action also evaluates any global excludes from the
+file [`.codacy.yml`](https://support.codacy.com/hc/en-us/articles/115002130625-Codacy-Configuration-File) in the project
+root folder. You MAY specify additional excludes for the engine `clang-tidy` which are also taken into account.
 
 Example:
 ~~~yml
