@@ -1,0 +1,14 @@
+name: 'Analyze With clang-tidy Action'
+author: 'Michael Beckh'
+description: 'Analyze code using clang-tidy'
+inputs:
+  id:
+    description: 'Optional id of the job if multiple run in parallel'
+    required: true
+  clang-args:
+    description: 'Additional arguments to pass to clang'
+    required: false
+    default: '-xc++ -std=c++20'
+runs:
+  using: 'node12'
+  main: './analyze-clang-tidy.js'

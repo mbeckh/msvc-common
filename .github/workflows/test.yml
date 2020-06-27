@@ -40,7 +40,21 @@ jobs:
         solution-path: actions/test
         projects: main_Test
         configuration: ${{ matrix.configuration }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
+
+    - name: Save output
+      uses: actions/upload-artifact@v2
+      with:
+        name: output
+        path: .mbeckh/output
+
+    - name: Save coverage
+      if: matrix.configuration == 'Debug'
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: .mbeckh/coverage
 
   analyze:
     name: Analyzing
@@ -50,10 +64,19 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Run 'analyze' action
-      uses: ./actions/analyze
+    - name: Run 'analyze-clang-tidy' action
+      uses: ./actions/analyze-clang-tidy
       with:
-        solution-path: actions/test
-        projects: main
-        configurations: Debug, Release
+        id: default
+
+    - name: Save logs
+      uses: actions/upload-artifact@v2
+      with:
+        name: clang-tidy
+        path: .mbeckh/clang-tidy-*.log
+
+    - name: Run 'analyze-report' action
+      uses: ./actions/analyze-report
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}

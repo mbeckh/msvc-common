@@ -5,5 +5,12 @@ engines:
   metric:
     exclude_paths:
       - '**/test/**'
+  clang-tidy:
+    exclude_paths:
+      - '**/test/test/**'
+languages:
+  cpp:
+    extensions:
+      - '.h'
 exclude_paths:
   - '**/dist/**'
