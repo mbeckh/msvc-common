@@ -238,7 +238,8 @@ exports.coverage = async function() {
 async function getMsvcVersion() {
   const globber = await glob.create(CL_PATH);
   const cl = await globber.glob();
-    
+
+  await io.mkdirP(tempPath);
   const filePath = path.join(tempPath, 'msc-version.cpp');
   fs.writeFileSync(filePath, '_MSC_VER');
   let version = '';
