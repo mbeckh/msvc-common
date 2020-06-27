@@ -221,12 +221,13 @@ exports.coverage = async function() {
     const repositoryName = getRepositoryName();
     for (const project of projects) {
       core.startGroup(`Getting code coverage for ${project}`);
+      const workPath = path.join(solutionPath, 'bin');
+      const coverageFile = path.join(path.relative(workPath, coveragePath), `${project}_${platform}${suffix}.xml`);
+      
       const output = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.coverage.out`), 'ax');
       try {
         const error = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.coverage.err`), 'ax');
         try {
-          const workPath = path.join(solutionPath, 'bin');
-          const coverageFile = path.join(path.relative(workPath, coveragePath), `${project}_${platform}${suffix}.xml`);
           await exec.exec('OpenCppCoverage',
                           [`--modules=${rootPath}`,
                            `--excluded_modules=${path.join(rootPath, 'lib', path.sep)}`,
