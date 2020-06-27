@@ -27,6 +27,10 @@ function forceWin32(filePath) {
 }
 const forceNative = path.sep === '/' ? forcePosix : forceWin32;
 
+function escapeRegExp(str) {
+    return str.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+}
+
 async function saveCache(paths, key) {
   try {
     return await cache.saveCache(paths.map((e) => forcePosix(e)), key);
@@ -252,8 +256,8 @@ exports.coverage = async function() {
       let data = fs.readFileSync(coverageFile, 'utf8');
       const root = /(?<=<source>).+?(?=<\/source>)/.exec(data)[0];
       data = data.replace(/(?<=<source>).+?(?=<\/source>)/, repositoryName);
-      data = data.replace(new RegExp(`${env.GITHUB_WORKSPACE}${path.sep}`), repositoryName);  // only one occurrence
-      data = data.replace(new RegExp(`${env.GITHUB_WORKSPACE.substring(root.length)}${path.sep}`, 'g'), repositoryName);
+      data = data.replace(new RegExp(escapeRegExp(`${env.GITHUB_WORKSPACE}${path.sep}`)), repositoryName);  // only one occurrence
+      data = data.replace(new RegExp(escapeRegExp(`${env.GITHUB_WORKSPACE.substring(root.length)}${path.sep}`), 'g'), repositoryName);
       data = data.replace(/\\/g, '/');
       fs.writeFileSync(coverageFile, data);
 
