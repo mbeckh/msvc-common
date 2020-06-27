@@ -266,7 +266,7 @@ exports.coverage = async function() {
     }
 
     core.startGroup('Sending coverage to codecov');
-    await exec.exec('bash', [ '-c', `bash <(curl -sS https://codecov.io/bash) -Z -f '${path.posix.join(forcePosix(coveragePath), '*.xml')}'` ]);
+    await exec.exec('bash', [ '-c', `bash <(curl -sS https://codecov.io/bash) -Z -s ${forcePosix(coveragePath)} -f '*.xml'` ]);
     core.endGroup();
 
     core.startGroup('Sending coverage to codacy');
