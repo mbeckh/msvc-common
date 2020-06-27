@@ -43,6 +43,12 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
 
+    - name: Save coverage
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: bin/*_coverage.xml
+
   analyze:
     name: Analyzing
     runs-on: windows-latest
@@ -60,7 +66,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: clang-tidy
-        path: .mbeckh/clang-tidy
+        path: .mbeckh/clang-tidy-*.log
 
     - name: Run 'analyze-report' action
       uses: ./actions/analyze-report
