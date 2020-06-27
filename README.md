@@ -21,7 +21,7 @@ The common settings are based on the following directory layout.
     -   [`msvc-common/`](#build-framework-this-project)
     -   [`obj/`](#intermediate-output-files)
     -   [`src/`](#source-files)
-	-   [`test/`](#tnit-tests)
+    -   [`test/`](#unit-tests)
 
 ### Root Folder
 The root folder contains the main solution file `<solution>.sln`.

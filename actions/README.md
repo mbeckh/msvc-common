@@ -9,11 +9,11 @@ The [build workflow](https://github.com/mbeckh/llamalog/actions?query=workflow%3
 example of all actions working together.
 
 The actions provide workflow steps for:
-- [Building software](#build-software)
-- [Run build artifacts](#run-a-build-artifact)
-- [Getting code coverage](#get-code-coverage)
-- [Analyze code quality](#analyze-code-quality)
-- [Report code quality](#report-code-quality)
+-   [Building software](#build-software)
+-   [Run build artifacts](#run-a-build-artifact)
+-   [Getting code coverage](#get-code-coverage)
+-   [Analyze code quality](#analyze-code-quality)
+-   [Report code quality](#report-code-quality)
 
 ## Pre-requisites
 The actions run on Windows builds only.
@@ -30,7 +30,7 @@ Example:
         configuration: Debug
 ~~~
 
-### Inputs
+### Inputs for `build`
 -   `solution-path` - If the solution file is not in the project root, provide the relative folder path
     (optional, defaults to project root folder).
 
@@ -60,7 +60,7 @@ Example:
         path: .mbeckh/output
 ~~~
 
-### Inputs
+### Inputs for `run`
 -   `solution-path` - If the solution file is not in the project root, provide the relative folder path
     (optional, defaults to project root folder).
 
@@ -106,7 +106,7 @@ Example:
         path: .mbeckh/coverage
 ~~~
 
-### Inputs
+### Inputs for `coverage`
 -   `solution-path` - If the solution file is not in the project root, provide the relative folder path
     (optional, defaults to project root folder).
 
@@ -146,7 +146,7 @@ Example:
         path: .mbeckh/clang-tidy-*.log
 ~~~
 
-### Inputs
+### Inputs for `analyze-clang-tidy`
 -   `id` - A unique id to keep the results of several runs separated (required).
 
 -   `clang-args` - Additional arguments to pass to the clang compiler, e.g. additional include paths
@@ -171,6 +171,6 @@ Example:
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
 ~~~
 
-### Inputs
+### Inputs for `analyze-report`
 -   `github-token` - The value of the Github API token (required).
 -   `codacy-token` - The value of the Codacy.com project API token (required).
