@@ -163,19 +163,24 @@ exports.run = async function() {
     
     for (const project of projects) {
       core.startGroup(`Running ${project}`);
+      core.info('open stdout');
       const output = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.out`), 'ax');
       try {
+        core.info('open stderr');
         const error = fs.openSync(path.join(outputPath, `${project}_${platform}${suffix}.err`), 'ax');
         try {
+          core.info('run');
           await exec.exec(path.join(env.GITHUB_WORKSPACE, solutionPath, 'bin', `${project}_${platform}${suffix}`), [ ], {
             'cwd': path.join(solutionPath, 'bin'),
             'listeners': {
               'stdout': (data) => fs.appendFileSync(output, data),
               'stderr': (data) => fs.appendFileSync(error, data) }});
         } finally {
+          core.info('close stderr');
           fs.closeSync(error);
         }
       } finally {
+        core.info('close stdout');
         fs.closeSync(output);
       }
       core.endGroup();
