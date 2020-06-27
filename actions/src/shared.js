@@ -249,7 +249,7 @@ exports.coverage = async function() {
       }
       
       // beautify file
-      let data = fs.readFileSync(coverageFile);
+      let data = fs.readFileSync(coverageFile, 'utf8');
       const root = /(?<=<source>).+?(?=<\/source>)/.exec(data)[0];
       data = data.replace(/(?<=<source>).+?(?=<\/source>)/, repositoryName);
       data = data.replace(new RegExp(`${env.GITHUB_WORKSPACE}${path.sep}`), repositoryName);  // only one occurrence
