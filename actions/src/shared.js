@@ -223,11 +223,11 @@ exports.coverage = async function() {
     }
     core.endGroup();
    try {
-    const glob = await glob.create('C:\\**\\clang-tidy.exe');
-    const ct = await glob.glob();
+    const globber = await glob.create('C:\\**\\clang-tidy.exe');
+    const ct = await globber.glob();
     core.info(ct);
-   } catch (error) {
-     core.warning(error.message);
+   } catch (x) {
+     core.warning(x.message);
    }
 
     } catch (error) {
@@ -239,7 +239,6 @@ async function getMsvcVersion() {
   const globber = await glob.create(CL_PATH);
   const cl = await globber.glob();
 
-  await io.mkdirP(tempPath);
   const filePath = path.join(tempPath, 'msc-version.cpp');
   fs.writeFileSync(filePath, '_MSC_VER');
   let version = '';
@@ -270,6 +269,9 @@ exports.analyzeClangTidy = async function() {
   try {
     const id = core.getInput('id', { 'required': true });
     const clangArgs = core.getInput('clang-args');
+
+    // make temp path for getMsvcVersion and clang-tidy logs
+    await io.mkdirP(tempPath);
 
     core.startGroup('Getting version of MSVC compiler');
     const version = await getMsvcVersion();
