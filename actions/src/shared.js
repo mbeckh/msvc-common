@@ -4,7 +4,6 @@ const exec = require('@actions/exec');
 const cache = require('@actions/cache');
 const github = require('@actions/github');
 const glob = require('@actions/glob');
-const io = require('@actions/io');
 const fs = require('fs');
 const crypto = require('crypto');
 const path = require('path');
@@ -159,7 +158,7 @@ exports.run = async function() {
     const platform = core.getInput('platform');
 
     const outputPath = path.join(TEMP_PATH, OUTPUT_PATH);
-    io.mkdirP(outputPath);
+    fs.mkdirSync(outputPath, { 'recursive': true });
     
     for (const project of projects) {
       core.startGroup(`Running ${project}`);
@@ -220,8 +219,8 @@ exports.coverage = async function() {
     const rootPath = path.join(env.GITHUB_WORKSPACE, solutionPath, path.sep);
     const outputPath = path.join(TEMP_PATH, OUTPUT_PATH);
     const coveragePath = path.join(TEMP_PATH, COVERAGE_PATH);
-    io.mkdirP(outputPath);
-    io.mkdirP(coveragePath);
+    fs.mkdirSync(outputPath, { 'recursive': true });
+    fs.mkdirSync(coveragePath, { 'recursive': true });
 
     for (const project of projects) {
       core.startGroup(`Getting code coverage for ${project}`);
@@ -316,7 +315,7 @@ exports.analyzeClangTidy = async function() {
     const clangArgs = core.getInput('clang-args');
 
     // make temp path for getMsvcVersion and clang-tidy logs
-    await io.mkdirP(TEMP_PATH);
+    fs.mkdirSync(TEMP_PATH);
 
     core.startGroup('Getting version of MSVC compiler');
     const version = await getMsvcVersion();
