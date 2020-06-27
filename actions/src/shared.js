@@ -223,7 +223,7 @@ exports.coverage = async function() {
     }
     core.endGroup();
    try {
-    const globber = await glob.create('C:\\**\\clang-tidy.exe');
+    const globber = await glob.create('C:\\Progra*\\**\\clang-tidy.exe');
     const ct = await globber.glob();
     core.info(ct);
    } catch (x) {

@@ -8,5 +8,9 @@ engines:
   clang-tidy:
     exclude_paths:
       - '**/test/test/**'
+languages:
+  cpp:
+    extensions:
+      - '.h'
 exclude_paths:
   - '**/dist/**'

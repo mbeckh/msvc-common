@@ -44,10 +44,11 @@ jobs:
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
 
     - name: Save coverage
+      if: matrix.configuration == 'Debug'
       uses: actions/upload-artifact@v2
       with:
         name: coverage
-        path: bin/*_coverage.xml
+        path: actions/test/bin/*_coverage.xml
 
   analyze:
     name: Analyzing
