@@ -20,10 +20,10 @@ const CLANGTIDY_PATH = 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\
 
 // Normalize functions do not change separators, so add additional version
 function forcePosix(filePath) {
-  return path.posix.normalize(filePath).replaceAll(path.win32.sep, path.posix.sep);
+  return path.posix.normalize(filePath).replace(/\\/g, '/');
 }
 function forceWin32(filePath) {
-  return path.win32.normalize(filePath).replaceAll(path.posix.sep, path.win32.sep);
+  return path.win32.normalize(filePath).replace(/\//, '\\');
 }
 const forceNative = path.sep === '/' ? forcePosix : forceWin32;
 
@@ -251,9 +251,9 @@ exports.coverage = async function() {
       let data = fs.readFileSync(coverageFile);
       const root = /(?<=<source>).+?(?=<\/source>)/.exec(data)[0];
       data = data.replace(/(?<=<source>).+?(?=<\/source>)/, repositoryName);
-      data = data.replace(`${env.GITHUB_WORKSPACE}${path.sep}`, repositoryName);
-      data = data.replaceAll(`${env.GITHUB_WORKSPACE.substring(root.length)}${path.sep}`, repositoryName);
-      data = data.replaceAll('\\', '/');
+      data = data.replace(new RegExp(`${env.GITHUB_WORKSPACE}${path.sep}`), repositoryName);  // only one occurrence
+      data = data.replace(new RegExp(`${env.GITHUB_WORKSPACE.substring(root.length)}${path.sep}`, 'g'), repositoryName);
+      data = data.replace(/\\/g, '/');
       fs.writeFileSync(coverageFile, data);
 
       core.endGroup();
