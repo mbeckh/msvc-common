@@ -1,6 +1,6 @@
 # msvc-common Changes
 
-## v2.1.0 - 2020-06-24
+## v2.1.0 - 2020-06-27
 -   \{Feature\] Add actions for automating workflows on Github.
 
 ## v2.0.0 - 2020-06-08
