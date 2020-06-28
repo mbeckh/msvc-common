@@ -1,7 +1,7 @@
 # Actions
 [![Release](https://img.shields.io/github/v/tag/mbeckh/msvc-common?label=Release&style=flat-square)](https://github.com/mbeckh/msvc-common/releases/)
 [![Tests](https://img.shields.io/github/workflow/status/mbeckh/msvc-common/test/master?label=Tests&logo=GitHub&style=flat-square)](https://github.com/mbeckh/msvc-common/actions)
-[![Codacy Grade](https://img.shields.io/codacy/grade/2958536c2ab542ceb181ff99d6011558?label=Code%20Quality&logo=codacy&style=flat-square)]((https://www.codacy.com/manual/mbeckh/msvc-common?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mbeckh/msvc-common&amp;utm_campaign=Badge_Grade)
+[![Codacy Grade](https://img.shields.io/codacy/grade/2958536c2ab542ceb181ff99d6011558?label=Code%20Quality&logo=codacy&style=flat-square)](https://www.codacy.com/manual/mbeckh/msvc-common?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mbeckh/msvc-common&amp;utm_campaign=Badge_Grade)
 [![License](https://img.shields.io/github/license/mbeckh/msvc-common?label=License&style=flat-square)](https://github.com/mbeckh/msvc-common/blob/master/LICENSE)
 
 The actions allow running a full CI pipeline with build, test and code metrics for Visual Studio/MSBuild on Github.
