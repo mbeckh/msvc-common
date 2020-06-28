@@ -1,12 +1,13 @@
-# Actions
+# Github Actions for Continuous Integration
 [![Release](https://img.shields.io/github/v/tag/mbeckh/msvc-common?label=Release&style=flat-square)](https://github.com/mbeckh/msvc-common/releases/)
 [![Tests](https://img.shields.io/github/workflow/status/mbeckh/msvc-common/test/master?label=Tests&logo=GitHub&style=flat-square)](https://github.com/mbeckh/msvc-common/actions)
+[![Codacy Grade](https://img.shields.io/codacy/grade/2958536c2ab542ceb181ff99d6011558?label=Code%20Quality&logo=codacy&style=flat-square)](https://www.codacy.com/manual/mbeckh/msvc-common?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mbeckh/msvc-common&amp;utm_campaign=Badge_Grade)
 [![License](https://img.shields.io/github/license/mbeckh/msvc-common?label=License&style=flat-square)](https://github.com/mbeckh/msvc-common/blob/master/LICENSE)
 
 The actions allow running a full CI pipeline with build, test and code metrics for Visual Studio/MSBuild on Github.
 They depend on the framework set by the [msvc-common configuration](https://github.com/mbeckh/msvc-common).
-The [build workflow](https://github.com/mbeckh/llamalog/actions?query=workflow%3Abuild) of the [llamalog project](https://github.com/mbeckh/llamalog) is an
-example of all actions working together.
+The [build workflow](https://github.com/mbeckh/llamalog/actions?query=workflow%3Abuild) of the
+[llamalog project](https://github.com/mbeckh/llamalog) is an example of all actions working together.
 
 The actions provide workflow steps for:
 -   [Building software](#build-software)
@@ -71,10 +72,10 @@ Example:
 -   `platform` - The name of the platform (optional, defaults to `x64`).
 
 ## Get code coverage
-Run a coverage analysis on a binary produced by a previous [build](#build-software). A copy of the data printed to `stdout` and
-`stderr` is saved to files `<project>_<platform><debug-suffix>.out` and `<project>_<platform><debug-suffix>.out`
-respectively. `<debug-suffix>` is `d` for configuration `Debug`, else empty. Both files are stored in the folder
-`.mbeckh/output/`.The coverage report is saved in `.mbeckh/coverage`.
+Run a coverage analysis on a binary produced by a previous [build](#build-software). A copy of the data printed to
+`stdout` and `stderr` is saved to files `<project>_<platform><debug-suffix>.out` and
+`<project>_<platform><debug-suffix>.out` respectively. `<debug-suffix>` is `d` for configuration `Debug`, else empty.
+Both files are stored in the folder `.mbeckh/output/`.The coverage report is saved in `.mbeckh/coverage`.
 
 For the time being, all coverage reports are sent for the language `CPP` because else Codacy either ignores headers or
 source files. If required, an enhancement can be made to allow configuration for language argument.
@@ -174,3 +175,7 @@ Example:
 ### Inputs for `analyze-report`
 -   `github-token` - The value of the Github API token (required).
 -   `codacy-token` - The value of the Codacy.com project API token (required).
+
+## License
+The code is released under the Apache License Version 2.0. Please see [LICENSE](../LICENSE) for details and
+[NOTICE](../NOTICE) for the required information when using the project in your own work.
