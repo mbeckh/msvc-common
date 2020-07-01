@@ -350,7 +350,9 @@ exports.analyzeClangTidy = async function() {
     const args = `--system-header-prefix=lib/ -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs}`;
     const output = fs.openSync(path.join(TEMP_PATH, `clang-tidy-${id}.log`), 'ax');
     try {
-      await exec.exec(`"${CLANGTIDY_PATH}" --header-filter="^(?!lib[/\\].*$).*" ${files.join(' ')} -- ${args}`,
+      const pattern = path.concat(workspace, '(include|msvc|src|test)', '.*').replace(/[\/\\]/g, '[\\/\\\\]');
+      core.info(pattern);
+      await exec.exec(`"${CLANGTIDY_PATH}" --header-filter="${pattern}" ${files.join(' ')} -- ${args}`,
         [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true, 'listeners': { 'stdout': (data) => fs.appendFileSync(output, data) }});
     } finally {
       fs.closeSync(output);
