@@ -351,7 +351,6 @@ exports.analyzeClangTidy = async function() {
     const output = fs.openSync(path.join(TEMP_PATH, `clang-tidy-${id}.log`), 'ax');
     try {
       const pattern = path.join(workspace, '(include|msvc|src|test)', '.*').replace(/[\/\\]/g, '[\\/\\\\]');
-      core.info(pattern);
       await exec.exec(`"${CLANGTIDY_PATH}" --header-filter="${pattern}" ${files.join(' ')} -- ${args}`,
         [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true, 'listeners': { 'stdout': (data) => fs.appendFileSync(output, data) }});
     } finally {
