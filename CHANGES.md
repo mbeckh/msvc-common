@@ -1,5 +1,8 @@
 # msvc-common Changes
 
+## v2.1.1 - 2020-07-02
+-   \[Fix\] clang-tidy now reports errors in headers.
+
 ## v2.1.0 - 2020-06-28
 -   \{Feature\] Add actions for automating workflows on Github.
 
