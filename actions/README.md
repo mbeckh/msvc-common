@@ -41,6 +41,8 @@ Example:
 
 -   `platform` - The name of the platform for which to build (optional, defaults to `x64`).
 
+-   `extra-compiler-args` - Supply additional arguments to the compiler (optional).
+
 ## Run a build artifact
 Run a binary produced by a previous [build](#build). A copy of the data printed to `stdout` and `stderr` is saved to
 files `<project>_<platform><debug-suffix>.out` and `<project>_<platform><debug-suffix>.out` respectively.

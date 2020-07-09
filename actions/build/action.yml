@@ -16,6 +16,11 @@ inputs:
     description: 'The platform for which to build'
     required: false
     default: 'x64'
+  extra-compiler-args:
+    description: 'Pass extra arguments to the compiler'
+    required: false
+    default: ''
+    
 runs:
   using: 'node12'
   main: './build.js'

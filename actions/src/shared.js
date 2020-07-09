@@ -160,9 +160,14 @@ exports.build = async function() {
     const projects = getProjects();
     const configuration = core.getInput('configuration', { 'required': true });
     const platform = core.getInput('platform');
+    const extraCompilerArgs = core.getInput('extra-compiler-args');
 
     core.startGroup(`Building projects ${projects.join(', ')}`);
-    await exec.exec(`"${MSBUILD_PATH}"`, [ `${solutionName}.sln`, '/m', `/t:${projects.join(';')}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}` ], { 'cwd': solutionPath });
+    let buildArgs = [ `${solutionName}.sln`, '/m', `/t:${projects.join(';')}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}` ];
+    if (extraCompilerArgs) {
+      buildArgs.push(`/p:ExtraCompilerAgrs="${extraCompilerArgs}"`);
+    }
+    await exec.exec(`"${MSBUILD_PATH}"`, buildArgs, { 'cwd': solutionPath });
     core.endGroup();
   } catch (error) {
     core.setFailed(error.message);
