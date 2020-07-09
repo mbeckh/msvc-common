@@ -1,5 +1,8 @@
 # msvc-common Changes
 
+## v2.2.0 - 2020-07-09
+-   \[Feature\] Allow extra arguments for compiler in build action.
+
 ## v2.1.1 - 2020-07-02
 -   \[Fix\] clang-tidy now reports errors in headers.
 

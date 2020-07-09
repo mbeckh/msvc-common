@@ -25,6 +25,7 @@
       <DisableSpecificWarnings>4373</DisableSpecificWarnings>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_WIN32_WINNT=0x0602;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions Condition="'$(ExtraCompilerArgs)'!=''">$(ExtraCompilerArgs) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Condition="'$(Configuration)'=='Debug'">
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
