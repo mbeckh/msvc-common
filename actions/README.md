@@ -140,7 +140,7 @@ Example:
       uses: mbeckh/msvc-common/actions/analyze-clang-tidy@v2
       with:
         id: default
-        clang-args: -xc++ -std=c++20 -Iinclude -DUNICODE -DNOMINMAX -DWIN32_LEAN_AND_MEAN
+        clang-args: -D_DEBUG
 
     - name: Save logs
       uses: actions/upload-artifact@v2
@@ -151,9 +151,7 @@ Example:
 
 ### Inputs for `analyze-clang-tidy`
 -   `id` - A unique id to keep the results of several runs separated (required).
-
--   `clang-args` - Additional arguments to pass to the clang compiler, e.g. additional include paths
-    (optional, default is `-xc++ -std=c++20`).
+-   `clang-args` - Additional arguments to pass to the clang compiler, e.g. additional include paths (optional).
 
 ## Report code quality
 Sends one or multiple results from the action [`analyze-clang-tidy`](#analyze-code-quality) to Codacy. The latest 

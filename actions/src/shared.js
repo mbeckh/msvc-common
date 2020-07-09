@@ -352,11 +352,10 @@ exports.analyzeClangTidy = async function() {
     const workspace = env.GITHUB_WORKSPACE;
     const files = (await globber.glob()).map((e) => path.relative(workspace, e));
 
-    const args = `--system-header-prefix=lib/ -Wall -Wmicrosoft -fmsc-version=${version} -fms-extensions -fms-compatibility -fdelayed-template-parsing -D_CRT_USE_BUILTIN_OFFSETOF ${clangArgs}`;
+    const args = `-fmsc-version=${version}${clangArgs ? ' ' : ''}${clangArgs}`;
     const output = fs.openSync(path.join(TEMP_PATH, `clang-tidy-${id}.log`), 'ax');
     try {
-      const pattern = path.join(workspace, '(include|msvc|src|test)', '.*').replace(/[\/\\]/g, '[\\/\\\\]');
-      await exec.exec(`"${CLANGTIDY_PATH}" --header-filter="${pattern}" ${files.join(' ')} -- ${args}`,
+      await exec.exec(`"${CLANGTIDY_PATH}" ${files.join(' ')} -- ${args}`,
         [ ], { 'windowsVerbatimArguments': true, 'ignoreReturnCode': true, 'listeners': { 'stdout': (data) => fs.appendFileSync(output, data) }});
     } finally {
       fs.closeSync(output);
