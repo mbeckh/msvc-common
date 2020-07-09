@@ -211,8 +211,6 @@ limitations under the License.
 #define DTGM_INTERNAL_CLASS_DETACH(class_, parameterCount_, return_, function_, parameters_, arguments_, default_) \
 	ASSERT_EQ(NO_ERROR, DetourDetach(&(void*&) DTGM_FakeClass::m_real##function_, *(BYTE**) &DTGM_ClassMock::m_fake##function_));
 
-extern CRITICAL_SECTION txcs;
-
 #define DTGM_DECLARE_CLASS_MOCK(class_, functions_)                      \
 	namespace detours_gmock_class_##class_ {                             \
 		namespace {                                                      \
@@ -246,20 +244,16 @@ extern CRITICAL_SECTION txcs;
 		functions_(DTGM_INTERNAL_DEFINE_CLASS_FAKE_METHOD);              \
 		void DTGM_SetupClass() {                                         \
 			functions_(DTGM_INTERNAL_SET_DEFAULT_CLASS_ACTION);          \
-			EnterCriticalSection(&txcs);                                 \
 			ASSERT_EQ(NO_ERROR, DetourTransactionBegin());               \
 			ASSERT_EQ(NO_ERROR, DetourUpdateThread(GetCurrentThread())); \
 			functions_(DTGM_INTERNAL_CLASS_ATTACH);                      \
 			ASSERT_EQ(NO_ERROR, DetourTransactionCommit());              \
-			LeaveCriticalSection(&txcs);                                 \
 		}                                                                \
 		void DTGM_DetachClass() {                                        \
-			EnterCriticalSection(&txcs);                                 \
 			ASSERT_EQ(NO_ERROR, DetourTransactionBegin());               \
 			ASSERT_EQ(NO_ERROR, DetourUpdateThread(GetCurrentThread())); \
 			functions_(DTGM_INTERNAL_CLASS_DETACH);                      \
 			ASSERT_EQ(NO_ERROR, DetourTransactionCommit());              \
-			LeaveCriticalSection(&txcs);                                 \
 		}                                                                \
 		}                                                                \
 	}
