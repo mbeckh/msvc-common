@@ -165,7 +165,7 @@ exports.build = async function() {
     core.startGroup(`Building projects ${projects.join(', ')}`);
     let buildArgs = [ `${solutionName}.sln`, '/m', `/t:${projects.join(';')}`, `/p:Configuration=${configuration}`, `/p:Platform=${platform}` ];
     if (extraCompilerArgs) {
-      buildArgs.push(`/p:ExtraCompilerArgs="${extraCompilerArgs}"`);
+      buildArgs.push(`/p:ExtraCompilerArgs=${extraCompilerArgs}`);
     }
     await exec.exec(`"${MSBUILD_PATH}"`, buildArgs, { 'cwd': solutionPath });
     core.endGroup();
