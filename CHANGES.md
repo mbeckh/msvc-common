@@ -1,5 +1,8 @@
 # msvc-common Changes
 
+## v2.2.1 - 2020-10-24
+-   \[Dependency\] Updated dependencies for build actions.
+
 ## v2.2.0 - 2020-07-09
 -   \[Feature\] Allow extra arguments for compiler in build action.
 
